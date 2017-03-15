@@ -27,6 +27,8 @@ public:
 	// PerPersonTripDataAnalyser();
 	bool setFile(std::string fileName);
 	void calculatePerStationCount();
+	std::map<std::string, std::vector<int> > getOnPerStationCount();
+	std::map<std::string, std::vector<int> > getOffPerStationCount();
 protected:
 	void updateCount(std::string onStopName, std::string offStopName, int row);
 protected:
@@ -46,7 +48,7 @@ private:
 	int m_iOffTimeCol;
 	int m_iOnStopNameCol;
 	int m_iOffStopNameCol;
-
+	int m_iTripTypeCol;
 };
 
 class RoamResultAnalyser: public PerPersonTripDataAnalyser {
