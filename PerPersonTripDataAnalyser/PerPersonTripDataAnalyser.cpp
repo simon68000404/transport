@@ -8,7 +8,7 @@ using namespace std;
 
 bool PerPersonTripDataAnalyser::setFile(string fileName) {
 	if (fileName.length() == 0) {
-        cout << "File name is empty.";
+        cout << "File name is empty." << endl;
         return false;
     }
 	this->m_infileName = fileName;
@@ -28,7 +28,7 @@ void OpalTripAnalyser::calculatePerStationCount() {
     ifstream infile;
     infile.open(m_infileName.c_str());
     if (!infile.is_open()) {
-        cout << "File " << m_infileName << " couldn't be opened.";
+        cout << "File " << m_infileName << " couldn't be opened." << endl;
         return;
     }
 
@@ -86,9 +86,11 @@ void OpalTripAnalyser::calculatePerStationCount() {
         }
 
         if (tripType == "Train") {
-            onStopName = onStopName.substr(0, onStopName.length() - 8);
-            offStopName = offStopName.substr(0, offStopName.length() - 8);
-            updateCount(onStopName, offStopName, r);
+            if ("UNKNOWN" != onStopName && "UNKNOWN" != offStopName) {
+                onStopName = onStopName.substr(0, onStopName.length() - 8);
+                offStopName = offStopName.substr(0, offStopName.length() - 8);
+                updateCount(onStopName, offStopName, r);
+            }
         }
         // cout << onStopName << " " << offStopName << endl;
 
@@ -151,8 +153,9 @@ void PerPersonTripDataAnalyser::updateCount(std::string strOnStopName, std::stri
 }
 
 RoamResultAnalyser::RoamResultAnalyser() {
-    m_iOnStopFirstTripCol = 2;
-    m_iOffStopLastTripCol = 1;
+    m_iOriginStopCol = 2;
+    m_iDestStopCol = 1;
+    m_iFirstTripLineCol = 40;
 }
 
 void RoamResultAnalyser::calculatePerStationCount() {
@@ -175,8 +178,9 @@ void RoamResultAnalyser::calculatePerStationCount() {
 
         string onStopName = "";
         string offStopName = "";
+        string strFirstTripLineName = "";
 
-        while(c < m_iOffStopLastTripCol) {
+        while(c < m_iDestStopCol) {
             getline(ss, value, ',');
             c++;
         }    
@@ -186,7 +190,7 @@ void RoamResultAnalyser::calculatePerStationCount() {
         offStopName = value;
         c++;
 
-        while(c < m_iOnStopFirstTripCol) {
+        while(c < m_iOriginStopCol) {
             getline(ss, value, ',');
             // cout << c << " " << value << endl;
             c++;
@@ -197,15 +201,33 @@ void RoamResultAnalyser::calculatePerStationCount() {
         // cout << c << " " << value << endl;
         onStopName = value;
         c++;
+
+        while(c < m_iFirstTripLineCol) {
+            getline(ss, value, ',');
+            // cout << c << " " << value << endl;
+            c++;
+        }
+
+        // First trip line
+        getline(ss, value, ',');
+        // cout << c << " " << value << endl;
+        strFirstTripLineName = value;
+        c++;
+
         
         while (getline(ss, value, ',')) {
             // cout << r << " " << c << " " << value << endl;
             c++;
         }
 
-        onStopName = onStopName.substr(1, onStopName.length() - 2);
-        offStopName = offStopName.substr(1, offStopName.length() - 2);
-        updateCount(onStopName, offStopName, r);
+        if (strFirstTripLineName != "NA") {
+            onStopName = onStopName.substr(1, onStopName.length() - 2);
+            offStopName = offStopName.substr(1, offStopName.length() - 2);
+            updateCount(onStopName, offStopName, r);
+        }
+        else {
+            // cout << "NA: " << r << " ";
+        }
         // cout << onStopName << " " << offStopName << endl;
 
         r++;

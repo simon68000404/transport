@@ -100,8 +100,11 @@ int main(int argc, char* argv[]) {
         map<string, vector<int> > mapOffRoamPerStationCount = roam.getOffPerStationCount();
 
         float fSumInaccuracy = 0.0f;
+        float fAccuracy = 0.0f;
+        float fInaccuracy = 0.0f;
         ofstream outfile;
-        outfile.open("opal_roam_perstation_08" + strDate + "_on.csv");
+
+        outfile.open("./Results/opal_roam_perstation_08" + strDate + "_on.csv");
         // output on as csv
         outfile << "Opal" << ", Count, " << "Roam" << ", Count," << endl;
 
@@ -112,14 +115,17 @@ int main(int argc, char* argv[]) {
             map<string, vector<int> >::iterator itRoam = mapOnRoamPerStationCount.find(strStationName);
             if (itRoam != mapOnRoamPerStationCount.end()) {
                 vector<int> vecRoam = itRoam->second;
-                float accuracy = float(vecRoam.size())/float(vecOpal.size());
-                float inaccuracy = 1 - accuracy;
-                fSumInaccuracy += inaccuracy;
-                outfile << strStationName << ", " << vecOpal.size() << ", " << itRoam->first << ", " << vecRoam.size() << ", " << accuracy << ", " << inaccuracy <<endl;
+                fAccuracy = float(vecRoam.size())/float(vecOpal.size());
+                fInaccuracy = 1 - fAccuracy;
+                outfile << strStationName << ", " << vecOpal.size() << ", " << itRoam->first << ", " << vecRoam.size() << ", " << fAccuracy << ", " << fInaccuracy << endl;
             }
             else {
+                fAccuracy = 0;
+                fInaccuracy = 1;
                 outfile << strStationName << ", " << vecOpal.size() << ", " << strStationName << ", " << 0 << ", " << 0 << ", " << 1 << endl;
             }
+
+            fSumInaccuracy += fInaccuracy;
         }
 
         outfile << ",,,,," << fSumInaccuracy/mapOnOpalPerStationCount.size() << endl;
@@ -128,7 +134,9 @@ int main(int argc, char* argv[]) {
 
 
         fSumInaccuracy = 0.0f;
-        outfile.open("opal_roam_perstation_08" + strDate + "_off.csv");
+        fAccuracy = 0.0f;
+        fInaccuracy = 0.0f;
+        outfile.open("./Results/opal_roam_perstation_08" + strDate + "_off.csv");
         // output off as csv
         outfile << "Opal" << ", Count, " << "Roam" << ", Count," << endl;
 
@@ -139,14 +147,18 @@ int main(int argc, char* argv[]) {
             map<string, vector<int> >::iterator itRoam = mapOffRoamPerStationCount.find(strStationName);
             if (itRoam != mapOffRoamPerStationCount.end()) {
                 vector<int> vecRoam = itRoam->second;
-                float accuracy = float(vecRoam.size())/float(vecOpal.size());
-                float inaccuracy = 1 - accuracy;
-                fSumInaccuracy += inaccuracy;
-                outfile << strStationName << ", " << vecOpal.size() << ", " << itRoam->first << ", " << vecRoam.size() << ", " << accuracy << ", " << inaccuracy <<endl;
+                fAccuracy = float(vecRoam.size())/float(vecOpal.size());
+                fInaccuracy = 1 - fAccuracy;
+                outfile << strStationName << ", " << vecOpal.size() << ", " << itRoam->first << ", " << vecRoam.size() << ", " << fAccuracy << ", " << fInaccuracy << endl;
             }
             else {
+                fAccuracy = 0;
+                fInaccuracy = 1;
                 outfile << strStationName << ", " << vecOpal.size() << ", " << strStationName << ", " << 0 << ", " << 0 << ", " << 1 << endl;
             }
+
+            fSumInaccuracy += fInaccuracy;
+
         }
 
         outfile << ",,,,," << fSumInaccuracy/mapOffOpalPerStationCount.size() << endl;

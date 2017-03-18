@@ -56,8 +56,9 @@ public:
 	RoamResultAnalyser();
 	void calculatePerStationCount();
 private:
-	int m_iOnStopFirstTripCol;
-	int m_iOffStopLastTripCol;
+	int m_iOriginStopCol;
+	int m_iDestStopCol;
+	int m_iFirstTripLineCol;
 };
 
 #endif
