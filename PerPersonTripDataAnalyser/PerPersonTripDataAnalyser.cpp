@@ -22,6 +22,9 @@ OpalTripAnalyser::OpalTripAnalyser() {
 	m_iOnStopNameCol = 54; // BC
 	m_iOffStopNameCol = 60; // BI
     m_iTripTypeCol = 10;
+
+    m_strExceptionNoTapOn = "Didn't tap on";
+    m_strExceptionNoTapOff = "Didn't tap off";
 }
 
 void OpalTripAnalyser::calculatePerStationCount() {
@@ -86,10 +89,20 @@ void OpalTripAnalyser::calculatePerStationCount() {
         }
 
         if (tripType == "Train") {
-            if ("UNKNOWN" != onStopName && "UNKNOWN" != offStopName) {
-                onStopName = onStopName.substr(0, onStopName.length() - 8);
-                offStopName = offStopName.substr(0, offStopName.length() - 8);
-                updateCount(onStopName, offStopName, r);
+            if ("UNKNOWN" != onStopName) {
+                if ("UNKNOWN" != offStopName) {
+                    onStopName = onStopName.substr(0, onStopName.length() - 8);
+                    offStopName = offStopName.substr(0, offStopName.length() - 8);
+                    updateCount(onStopName, offStopName, r);
+                }
+                else {
+                    vector<int> vecNoOff;
+                    m_mapExceptions.insert(pair<string, vector<int> >(m_strExceptionNoTapOff, vecNoOff));
+                }
+            }
+            else {
+                vector<int> vecNoOn;
+                m_mapExceptions.insert(pair<string, vector<int> >(m_strExceptionNoTapOn, vecNoOn));            
             }
         }
         // cout << onStopName << " " << offStopName << endl;
@@ -117,6 +130,10 @@ void OpalTripAnalyser::calculatePerStationCount() {
     // for (int i = 0; i < vec.size(); i++) {
     //     cout << vec[i] << endl;
     // }
+}
+
+std::map<std::string, std::vector<int> > OpalTripAnalyser::getExceptions() {
+    return m_mapExceptions;
 }
 
 map<std::string, std::vector<int> > PerPersonTripDataAnalyser::getOnPerStationCount() {
@@ -148,7 +165,7 @@ void PerPersonTripDataAnalyser::updateCount(std::string strOnStopName, std::stri
         m_mapOffCountPerStation.insert(pair<string, vector<int> >(strOffStopName, vecOff));
     }
     else {
-        it2->second.push_back(nRow);
+        it2->second.push_back(nRow); 
     }
 }
 
@@ -226,6 +243,7 @@ void RoamResultAnalyser::calculatePerStationCount() {
             updateCount(onStopName, offStopName, r);
         }
         else {
+            // m_mapExceptions.insert(pair<string, vector<int> >(m_strExceptionNotAbleToFindPath, r));
             // cout << "NA: " << r << " ";
         }
         // cout << onStopName << " " << offStopName << endl;

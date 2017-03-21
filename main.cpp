@@ -1,5 +1,6 @@
 #include "PrePuncProcessor/PrePuncProcessor.h"
 #include "PerPersonTripDataAnalyser/PerPersonTripDataAnalyser.h"
+#include "TransportApplication/TransportApplication.h"
 
 #include <iostream>
 #include <string>
@@ -77,93 +78,117 @@ int main(int argc, char* argv[]) {
         "FINAL_MERGE_TABLE-30-08-2016_matched.csv",
         "FINAL_MERGE_TABLE-31-08-2016_matched.csv",
     };
+
+    vector<string> strOpalNames;
+    vector<string> strRoamNames;
+    vector<string> strDayOnOutputNames;
+    vector<string> strDayOffOutputNames;
+    string strMergedOnOutputName = "./Results/opal_roam_perstation_08_on.csv";
+    string strMergedOffOutputName = "./Results/opal_roam_perstation_08_off.csv";
+
+    for (int i = 0; i < 31; i++) {
+        string strDate = i < 9 ? "0" + to_string(i + 1) : to_string(i + 1);
+        strOpalNames.push_back("/media/nlp/Maxtor/Transport/Opal/" + opalFileNames[i]);
+        strRoamNames.push_back("/media/nlp/Maxtor/Transport/Roam/Person/" + roamFileNames[i]);
+        strDayOnOutputNames.push_back("./Results/opal_roam_perstation_08" + strDate + "_on.csv");
+        strDayOffOutputNames.push_back("./Results/opal_roam_perstation_08" + strDate + "_off.csv");
+    }
+
+    TransportApplication::compareOpalAndRoamPerStationPerDay(
+        strOpalNames, 
+        strRoamNames, 
+        strDayOnOutputNames, 
+        strDayOffOutputNames, 
+        strMergedOnOutputName, 
+        strMergedOffOutputName);
+
 	// PrePuncProcessor test(3, 14, 18, 15, 19, 8, 16, 17, 20, 21);
     // bool succeeded = test.handle("/media/nlp/Maxtor/Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv");
     // cout << succeeded << endl;
     // test.isActDprtLaterThanArrv("/media/nlp/Maxtor/Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv");
 
-    for (int i = 0; i < 31; i++) {
-        opalFile = "/media/nlp/Maxtor/Transport/Opal/" + opalFileNames[i];
-        roamFile = "/media/nlp/Maxtor/Transport/Roam/Person/" + roamFileNames[i];
-        string strDate = i < 9 ? "0" + to_string(i + 1) : to_string(i + 1);
+    // for (int i = 0; i < 31; i++) {
+    //     opalFile = "/media/nlp/Maxtor/Transport/Opal/" + opalFileNames[i];
+    //     roamFile = "/media/nlp/Maxtor/Transport/Roam/Person/" + roamFileNames[i];
+    //     string strDate = i < 9 ? "0" + to_string(i + 1) : to_string(i + 1);
 
-        OpalTripAnalyser opal;
-        opal.setFile(opalFile);
-        opal.calculatePerStationCount();
-        map<string, vector<int> > mapOnOpalPerStationCount = opal.getOnPerStationCount();
-        map<string, vector<int> > mapOffOpalPerStationCount = opal.getOffPerStationCount();
+    //     OpalTripAnalyser opal;
+    //     opal.setFile(opalFile);
+    //     opal.calculatePerStationCount();
+    //     map<string, vector<int> > mapOnOpalPerStationCount = opal.getOnPerStationCount();
+    //     map<string, vector<int> > mapOffOpalPerStationCount = opal.getOffPerStationCount();
 
-        RoamResultAnalyser roam;
-        roam.setFile(roamFile);
-        roam.calculatePerStationCount();
-        map<string, vector<int> > mapOnRoamPerStationCount = roam.getOnPerStationCount();
-        map<string, vector<int> > mapOffRoamPerStationCount = roam.getOffPerStationCount();
+    //     RoamResultAnalyser roam;
+    //     roam.setFile(roamFile);
+    //     roam.calculatePerStationCount();
+    //     map<string, vector<int> > mapOnRoamPerStationCount = roam.getOnPerStationCount();
+    //     map<string, vector<int> > mapOffRoamPerStationCount = roam.getOffPerStationCount();
 
-        float fSumInaccuracy = 0.0f;
-        float fAccuracy = 0.0f;
-        float fInaccuracy = 0.0f;
-        ofstream outfile;
+    //     float fSumInaccuracy = 0.0f;
+    //     float fAccuracy = 0.0f;
+    //     float fInaccuracy = 0.0f;
+    //     ofstream outfile;
 
-        outfile.open("./Results/opal_roam_perstation_08" + strDate + "_on.csv");
-        // output on as csv
-        outfile << "Opal" << ", Count, " << "Roam" << ", Count," << endl;
+    //     outfile.open("./Results/opal_roam_perstation_08" + strDate + "_on.csv");
+    //     // output on as csv
+    //     outfile << "Opal" << ", Count, " << "Roam" << ", Count," << endl;
 
-        for (map<string, vector<int> >::iterator it = mapOnOpalPerStationCount.begin(); it != mapOnOpalPerStationCount.end(); ++it) {
-            string strStationName = it->first;
-            vector<int> vecOpal = it->second;
+    //     for (map<string, vector<int> >::iterator it = mapOnOpalPerStationCount.begin(); it != mapOnOpalPerStationCount.end(); ++it) {
+    //         string strStationName = it->first;
+    //         vector<int> vecOpal = it->second;
 
-            map<string, vector<int> >::iterator itRoam = mapOnRoamPerStationCount.find(strStationName);
-            if (itRoam != mapOnRoamPerStationCount.end()) {
-                vector<int> vecRoam = itRoam->second;
-                fAccuracy = float(vecRoam.size())/float(vecOpal.size());
-                fInaccuracy = 1 - fAccuracy;
-                outfile << strStationName << ", " << vecOpal.size() << ", " << itRoam->first << ", " << vecRoam.size() << ", " << fAccuracy << ", " << fInaccuracy << endl;
-            }
-            else {
-                fAccuracy = 0;
-                fInaccuracy = 1;
-                outfile << strStationName << ", " << vecOpal.size() << ", " << strStationName << ", " << 0 << ", " << 0 << ", " << 1 << endl;
-            }
+    //         map<string, vector<int> >::iterator itRoam = mapOnRoamPerStationCount.find(strStationName);
+    //         if (itRoam != mapOnRoamPerStationCount.end()) {
+    //             vector<int> vecRoam = itRoam->second;
+    //             fAccuracy = float(vecRoam.size())/float(vecOpal.size());
+    //             fInaccuracy = 1 - fAccuracy;
+    //             outfile << strStationName << ", " << vecOpal.size() << ", " << itRoam->first << ", " << vecRoam.size() << ", " << fAccuracy << ", " << fInaccuracy << endl;
+    //         }
+    //         else {
+    //             fAccuracy = 0;
+    //             fInaccuracy = 1;
+    //             outfile << strStationName << ", " << vecOpal.size() << ", " << strStationName << ", " << 0 << ", " << 0 << ", " << 1 << endl;
+    //         }
 
-            fSumInaccuracy += fInaccuracy;
-        }
+    //         fSumInaccuracy += fInaccuracy;
+    //     }
 
-        outfile << ",,,,," << fSumInaccuracy/mapOnOpalPerStationCount.size() << endl;
+    //     outfile << ",,,,," << fSumInaccuracy/mapOnOpalPerStationCount.size() << endl;
 
-        outfile.close();
+    //     outfile.close();
 
 
-        fSumInaccuracy = 0.0f;
-        fAccuracy = 0.0f;
-        fInaccuracy = 0.0f;
-        outfile.open("./Results/opal_roam_perstation_08" + strDate + "_off.csv");
-        // output off as csv
-        outfile << "Opal" << ", Count, " << "Roam" << ", Count," << endl;
+    //     fSumInaccuracy = 0.0f;
+    //     fAccuracy = 0.0f;
+    //     fInaccuracy = 0.0f;
+    //     outfile.open("./Results/opal_roam_perstation_08" + strDate + "_off.csv");
+    //     // output off as csv
+    //     outfile << "Opal" << ", Count, " << "Roam" << ", Count," << endl;
 
-        for (map<string, vector<int> >::iterator it = mapOffOpalPerStationCount.begin(); it != mapOffOpalPerStationCount.end(); ++it) {
-            string strStationName = it->first;
-            vector<int> vecOpal = it->second;
+    //     for (map<string, vector<int> >::iterator it = mapOffOpalPerStationCount.begin(); it != mapOffOpalPerStationCount.end(); ++it) {
+    //         string strStationName = it->first;
+    //         vector<int> vecOpal = it->second;
 
-            map<string, vector<int> >::iterator itRoam = mapOffRoamPerStationCount.find(strStationName);
-            if (itRoam != mapOffRoamPerStationCount.end()) {
-                vector<int> vecRoam = itRoam->second;
-                fAccuracy = float(vecRoam.size())/float(vecOpal.size());
-                fInaccuracy = 1 - fAccuracy;
-                outfile << strStationName << ", " << vecOpal.size() << ", " << itRoam->first << ", " << vecRoam.size() << ", " << fAccuracy << ", " << fInaccuracy << endl;
-            }
-            else {
-                fAccuracy = 0;
-                fInaccuracy = 1;
-                outfile << strStationName << ", " << vecOpal.size() << ", " << strStationName << ", " << 0 << ", " << 0 << ", " << 1 << endl;
-            }
+    //         map<string, vector<int> >::iterator itRoam = mapOffRoamPerStationCount.find(strStationName);
+    //         if (itRoam != mapOffRoamPerStationCount.end()) {
+    //             vector<int> vecRoam = itRoam->second;
+    //             fAccuracy = float(vecRoam.size())/float(vecOpal.size());
+    //             fInaccuracy = 1 - fAccuracy;
+    //             outfile << strStationName << ", " << vecOpal.size() << ", " << itRoam->first << ", " << vecRoam.size() << ", " << fAccuracy << ", " << fInaccuracy << endl;
+    //         }
+    //         else {
+    //             fAccuracy = 0;
+    //             fInaccuracy = 1;
+    //             outfile << strStationName << ", " << vecOpal.size() << ", " << strStationName << ", " << 0 << ", " << 0 << ", " << 1 << endl;
+    //         }
 
-            fSumInaccuracy += fInaccuracy;
+    //         fSumInaccuracy += fInaccuracy;
 
-        }
+    //     }
 
-        outfile << ",,,,," << fSumInaccuracy/mapOffOpalPerStationCount.size() << endl;
+    //     outfile << ",,,,," << fSumInaccuracy/mapOffOpalPerStationCount.size() << endl;
 
-        outfile.close();
+    //     outfile.close();
 
-    }
+    // }
 }
