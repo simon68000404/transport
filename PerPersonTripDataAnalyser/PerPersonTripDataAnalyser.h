@@ -25,17 +25,22 @@ public:
 class PerPersonTripDataAnalyser {
 public:
 	// PerPersonTripDataAnalyser();
-	bool setFile(std::string fileName);
+	bool setFiles(std::vector<std::string> strFileNames);
 	void calculatePerStationCount();
+	void calculatePerODCount();
 	std::map<std::string, std::vector<int> > getOnPerStationCount();
 	std::map<std::string, std::vector<int> > getOffPerStationCount();
+	std::map<std::string, std::vector<int> > getPerODCount();
 	std::map<std::string, std::vector<int> > getExceptions();
 protected:
-	void updateCount(std::string onStopName, std::string offStopName, int row);
+	void updatePerStationCount(std::string onStopName, std::string offStopName, int row);
+	void updatePerODCount(std::string onStopName, std::string offStopName, int row);
 protected:
 	std::map<std::string, std::vector<int> > m_mapOnCountPerStation;
 	std::map<std::string, std::vector<int> > m_mapOffCountPerStation;
-	std::string m_infileName;
+	std::map<std::string, std::vector<int> > m_mapCountPerOD;
+
+	std::vector<std::string> m_strInfileNames;
 
 	std::map<std::string, std::vector<int> > m_mapExceptions;
 };
@@ -44,6 +49,7 @@ class OpalTripAnalyser: public PerPersonTripDataAnalyser {
 public:
 	OpalTripAnalyser();
 	void calculatePerStationCount();
+	void calculatePerODCount();
 	std::map<std::string, std::vector<int> > getExceptions();
 private:
 	int m_iOnDateCol;
@@ -62,6 +68,7 @@ class RoamResultAnalyser: public PerPersonTripDataAnalyser {
 public:
 	RoamResultAnalyser();
 	void calculatePerStationCount();
+	void calculatePerODCount();
 	std::map<std::string, std::vector<int> > getExceptions();
 private:
 	int m_iOriginStopCol;

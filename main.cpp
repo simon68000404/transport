@@ -6,6 +6,9 @@
 #include <string>
 using namespace std;
 
+#define PER_STATION 0
+#define PER_OD 1
+
 int main(int argc, char* argv[]) {
 	string puncFile = "/media/nlp/Maxtor/Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv";
 	string opalFile = "/media/nlp/Maxtor/Transport/Opal/JS_ALL_V.20160801_20160816.csvp";
@@ -83,24 +86,59 @@ int main(int argc, char* argv[]) {
     vector<string> strRoamNames;
     vector<string> strDayOnOutputNames;
     vector<string> strDayOffOutputNames;
+    vector<string> strDayODOutputNames;
     string strMergedOnOutputName = "./Results/opal_roam_perstation_08_on.csv";
     string strMergedOffOutputName = "./Results/opal_roam_perstation_08_off.csv";
+    string strMergedODOutputName = "./Results/opal_roam_perod_08.csv";
 
     for (int i = 0; i < 31; i++) {
         string strDate = i < 9 ? "0" + to_string(i + 1) : to_string(i + 1);
         strOpalNames.push_back("/media/nlp/Maxtor/Transport/Opal/" + opalFileNames[i]);
         strRoamNames.push_back("/media/nlp/Maxtor/Transport/Roam/Person/" + roamFileNames[i]);
+
         strDayOnOutputNames.push_back("./Results/opal_roam_perstation_08" + strDate + "_on.csv");
         strDayOffOutputNames.push_back("./Results/opal_roam_perstation_08" + strDate + "_off.csv");
+
+        strDayODOutputNames.push_back("./Results/opal_roam_perod_08" + strDate + ".csv");
     }
 
+#if PER_STATION
+
+    // Per station - whole aug into one csv
     TransportApplication::compareOpalAndRoamPerStationPerDay(
         strOpalNames, 
         strRoamNames, 
-        strDayOnOutputNames, 
-        strDayOffOutputNames, 
         strMergedOnOutputName, 
         strMergedOffOutputName);
+
+    // Per station - each day of aug into one csv
+    for (int i = 0; i < 31; i++) {
+        vector<string> strInputNames1;
+        strInputNames1.push_back(strOpalNames[i]);
+        vector<string> strInputNames2;
+        strInputNames2.push_back(strRoamNames[i]);
+
+        TransportApplication::compareOpalAndRoamPerStationPerDay(strInputNames1, strInputNames2, strDayOnOutputNames[i], strDayOffOutputNames[i]);
+    }
+#endif
+
+#if PER_OD
+    Per od - whole aug into one csv
+    TransportApplication::compareOpalAndRoamPerODPerDay(
+        strOpalNames, 
+        strRoamNames, 
+        strMergedODOutputName);
+
+    // Per od - each day of aug into one csv
+    for (int i = 0; i < 2; i++) {
+        vector<string> strInputNames1;
+        strInputNames1.push_back(strOpalNames[i]);
+        vector<string> strInputNames2;
+        strInputNames2.push_back(strRoamNames[i]);
+
+        TransportApplication::compareOpalAndRoamPerODPerDay(strInputNames1, strInputNames2, strDayODOutputNames[i]);
+    }
+#endif
 
 	// PrePuncProcessor test(3, 14, 18, 15, 19, 8, 16, 17, 20, 21);
     // bool succeeded = test.handle("/media/nlp/Maxtor/Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv");
