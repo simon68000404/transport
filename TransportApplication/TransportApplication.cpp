@@ -1,7 +1,9 @@
 #include "TransportApplication.h"
 #include "../PerPersonTripDataAnalyser/PerPersonTripDataAnalyser.h"
+#include "../PrePuncProcessor/PrePuncProcessor.h"
 
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -198,4 +200,121 @@ void TransportApplication::compareOpalAndRoamPerODPerDay(std::vector<std::string
     map<string, vector<int> > mapRoamPerODCount = roam.getPerODCount();
 
     exportCountComparison(strOutputCSVName, mapOpalPerODCount, mapRoamPerODCount, "Opal,Count,Roam,Count");
+}
+
+void exportLines(string strFileName, map<string, Line> mapLines, string strTitle) {
+    ofstream outfile;
+
+    outfile.open(strFileName);
+
+    outfile << strTitle << endl;
+
+    for (map<string, Line>::iterator it = mapLines.begin(); it != mapLines.end(); it++) {
+        string strLineName = it->first;
+        Line line = it->second;
+        outfile << line.strName << "," << line.strType << endl;
+        
+        for (set<string>::iterator it2 = line.strStationNames.begin(); it2 != line.strStationNames.end(); it2++) {
+            outfile << ",," << *it2 << endl;
+        }
+
+        outfile << endl;
+    }
+
+    outfile.close();
+}
+
+void TransportApplication::generateAllLines(string strPuncFileName, string strOutputCSVName) {
+    int iTypeCol = 4;
+    int iLineCol = 5;
+    int iActStopNameCol = 19;
+
+    map<string, Line> mapLines;
+
+    ifstream infile;
+    infile.open(strPuncFileName.c_str());
+    if (!infile.is_open()) {
+        cout << "File " << strPuncFileName << " couldn't be opened." << endl;
+        return;
+    }
+
+    string value;
+    string line;
+
+    int r = 1; // Avoid first row 
+    getline(infile, line);
+    while (getline(infile, line)) {
+        int c = 0;
+        stringstream ss(line);
+
+        string strType = "";
+        string strLine = "";
+        string strActStopName = "";
+
+        while(c < iTypeCol) {
+            getline(ss, value, ',');
+            // cout << c << " " << value << endl;
+            c++;
+        }
+
+        // Service Type
+        getline(ss, value, ',');
+        strType = value.substr(1, value.length() - 2);
+        c++;
+
+        while(c < iLineCol) {
+            getline(ss, value, ',');
+            c++;
+        }
+
+        // Service Line
+        getline(ss, value, ',');
+        // cout << r << " " << c << " " << value;
+        strLine = value.substr(1, value.length() - 2);
+        c++;
+
+        while(c < iActStopNameCol) {
+            getline(ss, value, ',');
+            // cout << c << " " << value << endl;
+            c++;
+        }
+
+        // Actual Stop Station
+        getline(ss, value, ',');
+        // cout << c << " " << value << endl;
+        strActStopName = value.substr(1, value.length() - 2);
+        c++;
+        
+        while (getline(ss, value, ',')) {
+            // cout << r << " " << c << " " << value << endl;
+            c++;
+        }
+
+        if (strActStopName != "Missing") {
+            map<string, Line>::iterator it = mapLines.find(strLine);
+
+            if (it != mapLines.end()) {
+                Line &line = it->second;
+                line.strStationNames.insert(strActStopName);
+
+                // cout << "found, act stop: " << strActStopName << " " << line.strStationNames.size() << endl;
+            }
+            else {
+                Line line;
+                line.strType = strType;
+                line.strName = strLine;
+                line.strStationNames.insert(strActStopName);
+
+                mapLines.insert(pair<string, Line>(strLine, line));
+                            // cout << "didn't found, act stop: " << strActStopName << " " << line.strStationNames.size() << endl;
+
+            }
+        }
+
+        r++;
+    }
+
+    infile.close();
+
+    exportLines(strOutputCSVName, mapLines, "Service Line,Service Type,Stops");
 }

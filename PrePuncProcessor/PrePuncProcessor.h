@@ -2,6 +2,15 @@
 #define PREPUNCPROCESSOR_H 
 
 #include <string>
+#include <set>
+
+class Line {
+public:
+    std::string strType;
+    std::string strName;
+    std::set<std::string> strStationNames;
+};
+
 class PrePuncProcessor {
 public:
     PrePuncProcessor(int tripNameCol, 
