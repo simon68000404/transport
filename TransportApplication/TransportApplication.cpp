@@ -202,6 +202,45 @@ void TransportApplication::compareOpalAndRoamPerODPerDay(std::vector<std::string
     exportCountComparison(strOutputCSVName, mapOpalPerODCount, mapRoamPerODCount, "Opal,Count,Roam,Count");
 }
 
+void exportOpalExceptions(string strOutputCSVBasicName, string strOutputCSVNameModifier, vector<int> vecCount, string strTitle) {
+    // float fSumInaccuracy = 0.0f;
+    // float fAccuracy = 0.0f;
+    // float fInaccuracy = 0.0f;
+    ofstream outfile;
+
+    outfile.open(strOutputCSVBasicName + strOutputCSVNameModifier);
+    outfile << strTitle << endl;
+
+    outfile << "Exception Count," << vecCount.size() << endl;
+    outfile << "," << endl;
+
+    if (vecCount.size() > 0) {
+        outfile << "Rows," << vecCount[0] << endl;
+
+        for (int i = 1; i < vecCount.size(); i++) {
+            outfile << "," << vecCount[i] << endl;
+        }
+    }
+
+
+    // outfile << ",,,,," << fSumInaccuracy/map1.size() << endl;
+
+    outfile.close();
+}
+
+void TransportApplication::generateOpalExceptions(std::vector<std::string> strOpalInputCSVNames, std::string strOutputCSVBasicName) {
+    OpalTripAnalyser opal;
+    opal.setFiles(strOpalInputCSVNames);
+    opal.calculateExceptions();
+    vector<int> vecUnknownOnCount = opal.getUnknownOnCount();
+    vector<int> vecUnknownOffCount = opal.getUnknownOffCount();
+    vector<int> vecSameOnOffCount = opal.getSameOnOffCount();
+
+    exportOpalExceptions(strOutputCSVBasicName, "unknown_on_stats.csv", vecUnknownOnCount, "Opal UNKNOWN tap on stats");
+    exportOpalExceptions(strOutputCSVBasicName, "unknown_off_stats.csv", vecUnknownOffCount, "Opal UNKNOWN tap off stats");
+    exportOpalExceptions(strOutputCSVBasicName, "same_on_off_stats.csv", vecSameOnOffCount, "Opal same tap on/off stats");
+}
+
 void exportLines(string strFileName, map<string, Line> mapLines, string strTitle) {
     ofstream outfile;
 

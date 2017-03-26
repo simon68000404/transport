@@ -6,8 +6,16 @@
 #include <string>
 using namespace std;
 
-#define PER_STATION 0
-#define PER_OD 0
+#define PER_STATION_PER_DAY 1
+#define PER_STATION_PER_MONTH 0
+
+#define PER_OD_PER_DAY 0
+#define PER_OD_PER_MONTH 0
+
+#define EXTRACT_LINE_STATIONS 0
+
+#define OPAL_EXCEPTION_PER_MONTH 0
+#define OPAL_EXCEPTION_PER_DAY 0
 
 int main(int argc, char* argv[]) {
 	string puncFile = "/media/nlp/Maxtor/Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv";
@@ -87,9 +95,11 @@ int main(int argc, char* argv[]) {
     vector<string> strDayOnOutputNames;
     vector<string> strDayOffOutputNames;
     vector<string> strDayODOutputNames;
+    vector<string> strOpalExceptionBasicNames;
     string strMergedOnOutputName = "./Results/opal_roam_perstation_08_on.csv";
     string strMergedOffOutputName = "./Results/opal_roam_perstation_08_off.csv";
     string strMergedODOutputName = "./Results/opal_roam_perod_08.csv";
+    string strMergedOpalExceptionBasicName = "./Results/opal_08_";
 
     for (int i = 0; i < 31; i++) {
         string strDate = i < 9 ? "0" + to_string(i + 1) : to_string(i + 1);
@@ -100,19 +110,21 @@ int main(int argc, char* argv[]) {
         strDayOffOutputNames.push_back("./Results/opal_roam_perstation_08" + strDate + "_off.csv");
 
         strDayODOutputNames.push_back("./Results/opal_roam_perod_08" + strDate + ".csv");
+
+        strOpalExceptionBasicNames.push_back("./Results/opal_08" + strDate + "_");
     }
 
-#if PER_STATION
-
+#if PER_STATION_PER_MONTH
     // Per station - whole aug into one csv
     TransportApplication::compareOpalAndRoamPerStationPerDay(
         strOpalNames, 
         strRoamNames, 
         strMergedOnOutputName, 
         strMergedOffOutputName);
-
+#endif
+#if PER_STATION_PER_DAY
     // Per station - each day of aug into one csv
-    for (int i = 0; i < 31; i++) {
+    for (int i = 0; i < 1; i++) {
         vector<string> strInputNames1;
         strInputNames1.push_back(strOpalNames[i]);
         vector<string> strInputNames2;
@@ -120,17 +132,19 @@ int main(int argc, char* argv[]) {
 
         TransportApplication::compareOpalAndRoamPerStationPerDay(strInputNames1, strInputNames2, strDayOnOutputNames[i], strDayOffOutputNames[i]);
     }
+
 #endif
 
-#if PER_OD
+#if PER_OD_PER_MONTH
     // Per od - whole aug into one csv
     TransportApplication::compareOpalAndRoamPerODPerDay(
         strOpalNames, 
         strRoamNames, 
         strMergedODOutputName);
-
+#endif
+#if PER_OD_PER_DAY
     // Per od - each day of aug into one csv
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 31; i++) {
         vector<string> strInputNames1;
         strInputNames1.push_back(strOpalNames[i]);
         vector<string> strInputNames2;
@@ -140,5 +154,24 @@ int main(int argc, char* argv[]) {
     }
 #endif
 
+#if EXTRACT_LINE_STATIONS
     TransportApplication::generateAllLines("/media/nlp/Maxtor/Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv", "all_lines.csv");
+#endif
+
+#if OPAL_EXCEPTION_PER_MONTH
+    // Per station - whole aug into one csv
+    TransportApplication::generateOpalExceptions(
+        strOpalNames, 
+        strMergedOpalExceptionBasicName);
+#endif
+#if OPAL_EXCEPTION_PER_DAY
+    // Per station - each day of aug into one csv
+    for (int i = 0; i < 2; i++) {
+        vector<string> strInputNames1;
+        strInputNames1.push_back(strOpalNames[i]);
+
+        TransportApplication::generateOpalExceptions(strInputNames1, strOpalExceptionBasicNames[i]);
+    }
+
+#endif
 }
