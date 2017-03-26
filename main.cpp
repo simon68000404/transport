@@ -6,7 +6,7 @@
 #include <string>
 using namespace std;
 
-#define PER_STATION_PER_DAY 1
+#define PER_STATION_PER_DAY 0
 #define PER_STATION_PER_MONTH 0
 
 #define PER_OD_PER_DAY 0
@@ -15,7 +15,7 @@ using namespace std;
 #define EXTRACT_LINE_STATIONS 0
 
 #define OPAL_EXCEPTION_PER_MONTH 0
-#define OPAL_EXCEPTION_PER_DAY 0
+#define OPAL_EXCEPTION_PER_DAY 1
 
 int main(int argc, char* argv[]) {
 	string puncFile = "/media/nlp/Maxtor/Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv";
@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
 #endif
 #if PER_STATION_PER_DAY
     // Per station - each day of aug into one csv
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 31; i++) {
         vector<string> strInputNames1;
         strInputNames1.push_back(strOpalNames[i]);
         vector<string> strInputNames2;

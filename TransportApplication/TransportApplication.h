@@ -11,9 +11,10 @@ public:
 	static void compareOpalAndRoamPerLinePerDay(std::string strOpalInputCSVNames[], std::string strRoamlInputCSVNames[], std::string strOnOutputCSVNames[], std::string strOffOutputCSVNames[], std::string strMergedOutputCSVName);
 	static void compareOpalAndRoamPerODPerDay(std::vector<std::string> strOpalInputCSVNames, std::vector<std::string> strRoamInputCSVNames, std::string strOutputCSVName);
 
-	static void generateOpalExceptions(std::vector<std::string> strOpalInputCSVNames, std::string strOutputCSVNamePrefix);
+	static void generateOpalExceptions(std::vector<std::string> strOpalInputCSVNames, std::string strOutputCSVBasicName);
+	static void generatePuncExceptions(std::vector<std::string> strOpalInputCSVNames, std::string strOutputCSVNameBaseName);
 
-	static void generateAllLines(std::string strPuncFileName, std::string strOutputCSVBasicName);
+	static void generateAllLines(std::string strPuncFileName, std::string strOutputCSVNameBaseName);
 };
 
 #endif

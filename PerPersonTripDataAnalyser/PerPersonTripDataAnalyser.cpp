@@ -8,6 +8,11 @@ using namespace std;
 
 bool PerPersonTripDataAnalyser::setFiles(vector<string> strFileNames) {
     this->m_strInfileNames = strFileNames;
+    this->m_nTotalRows = 0;
+}
+
+int PerPersonTripDataAnalyser::getTotalRowCount() {
+    return m_nTotalRows;
 }
 
 OpalTripAnalyser::OpalTripAnalyser() {
@@ -103,6 +108,8 @@ void OpalTripAnalyser::calculatePerStationCount() {
             r++;
         }
 
+        m_nTotalRows += r;
+
     	infile.close();
     }   
 }
@@ -184,6 +191,8 @@ void OpalTripAnalyser::calculatePerODCount() {
 
             r++;
         }
+
+        m_nTotalRows += r;
 
         infile.close();
     }   
@@ -268,8 +277,10 @@ void OpalTripAnalyser::calculateExceptions() {
             r++;
         }
 
+        m_nTotalRows += r;
+
         infile.close();
-    }   
+    }
 }
 
 
@@ -430,6 +441,8 @@ void RoamResultAnalyser::calculatePerStationCount() {
             r++;
         }
 
+        m_nTotalRows += r;
+
         infile.close();
     }
 }
@@ -510,6 +523,8 @@ void RoamResultAnalyser::calculatePerODCount() {
 
             r++;
         }
+
+        m_nTotalRows += r;
 
         infile.close();
     }

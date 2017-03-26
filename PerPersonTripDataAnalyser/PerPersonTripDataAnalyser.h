@@ -28,9 +28,11 @@ public:
 	bool setFiles(std::vector<std::string> strFileNames);
 	void calculatePerStationCount();
 	void calculatePerODCount();
+	void calculateExceptions();
 	std::map<std::string, std::vector<int> > getOnPerStationCount();
 	std::map<std::string, std::vector<int> > getOffPerStationCount();
 	std::map<std::string, std::vector<int> > getPerODCount();
+	int getTotalRowCount();
 	// std::map<std::string, std::vector<int> > getExceptions();
 protected:
 	void updatePerStationCount(std::string onStopName, std::string offStopName, int row);
@@ -41,6 +43,8 @@ protected:
 	std::map<std::string, std::vector<int> > m_mapCountPerOD;
 
 	std::vector<std::string> m_strInfileNames;
+
+	int m_nTotalRows;
 
 	// std::map<std::string, std::vector<int> > m_mapExceptions;
 };
@@ -83,6 +87,7 @@ public:
 	RoamResultAnalyser();
 	void calculatePerStationCount();
 	void calculatePerODCount();
+	void calculateExceptions();
 	// std::map<std::string, std::vector<int> > getExceptions();
 private:
 	int m_iOriginStopCol;
