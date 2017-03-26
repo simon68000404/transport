@@ -61,9 +61,9 @@ public:
 	std::vector<int> getSameOnOffCount();
 	// std::map<std::string, std::vector<int> > getExceptions();
 private:
-	void updateUnknownOnCount(int row);
-	void updateUnknownOffCount(int row);
-	void updateSameOnOffCount(int row);
+	void updateUnknownOnCount(int nRow);
+	void updateUnknownOffCount(int nRow);
+	void updateSameOnOffCount(int nRow);
 
 	int m_iOnDateCol;
 	int m_iOnTimeCol;
@@ -88,11 +88,17 @@ public:
 	void calculatePerStationCount();
 	void calculatePerODCount();
 	void calculateExceptions();
+
+	std::vector<int> getMT2TripsCount();
 	// std::map<std::string, std::vector<int> > getExceptions();
 private:
+	void updateMT2TripsCount(int nRow);
+
 	int m_iOriginStopCol;
 	int m_iDestStopCol;
 	int m_iFirstTripLineCol;
+
+	std::vector<int> m_vecMT2TripsCount;
 
 	// std::string m_strExceptionNotAbleToFindPath;
 };

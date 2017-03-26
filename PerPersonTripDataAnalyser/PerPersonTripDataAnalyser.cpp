@@ -529,3 +529,69 @@ void RoamResultAnalyser::calculatePerODCount() {
         infile.close();
     }
 }
+
+void RoamResultAnalyser::calculateExceptions() {
+    ifstream infile;
+    for (int i = 0; i < m_strInfileNames.size(); i++) {
+        if (i == 2) break;
+        infile.open(m_strInfileNames[i].c_str());
+        if (!infile.is_open()) {
+            cout << "File " << m_strInfileNames[i] << " couldn't be opened." << endl;
+            return;
+        }
+
+        string value;
+        string line;
+
+        int r = 1; // Avoid first row 
+        struct tm tm = {};
+        getline(infile, line);
+        while (getline(infile, line)) {
+            int c = 0;
+            stringstream ss(line);
+
+            string strFirstTripLineName = "";
+
+            while(c < m_iFirstTripLineCol) {
+                getline(ss, value, ',');
+                // cout << c << " " << value << endl;
+                c++;
+            }
+
+            // First trip line
+            getline(ss, value, ',');
+            // cout << c << " " << value << endl;
+            strFirstTripLineName = value;
+            c++;
+
+            
+            while (getline(ss, value, ',')) {
+                // cout << r << " " << c << " " << value << endl;
+                c++;
+            }
+
+            if (strFirstTripLineName == "NA") {
+                updateMT2TripsCount(r);
+            }
+            else {
+                // m_mapExceptions.insert(pair<string, vector<int> >(m_strExceptionNotAbleToFindPath, r));
+                // cout << "NA: " << r << " ";
+            }
+            // cout << onStopName << " " << offStopName << endl;
+
+            r++;
+        }
+
+        m_nTotalRows += r;
+
+        infile.close();
+    }
+}
+
+void RoamResultAnalyser::updateMT2TripsCount(int nRow) {
+    m_vecMT2TripsCount.push_back(nRow);
+}
+
+vector<int> RoamResultAnalyser::getMT2TripsCount() {
+    return m_vecMT2TripsCount;    
+}
