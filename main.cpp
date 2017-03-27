@@ -14,12 +14,13 @@ using namespace std;
 
 #define EXTRACT_LINE_STATIONS 0
 
-#define OPAL_EXCEPTION_PER_MONTH 0
-#define OPAL_EXCEPTION_PER_DAY 0
+#define OPAL_EXCEPTION_PER_MONTH 1
+#define OPAL_EXCEPTION_PER_DAY 1
 
 #define ROAM_EXCEPTION_PER_MONTH 1
-#define ROAM_EXCEPTION_PER_DAY 0
+#define ROAM_EXCEPTION_PER_DAY 1
 
+#define PUNC_EXCEPTION_PER_MONTH 1
 int main(int argc, char* argv[]) {
 	string puncFile = "/media/nlp/Maxtor/Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv";
 	string opalFile = "/media/nlp/Maxtor/Transport/Opal/JS_ALL_V.20160801_20160816.csvp";
@@ -103,8 +104,9 @@ int main(int argc, char* argv[]) {
     string strMergedOnOutputName = "./Results/opal_roam_perstation_08_on.csv";
     string strMergedOffOutputName = "./Results/opal_roam_perstation_08_off.csv";
     string strMergedODOutputName = "./Results/opal_roam_perod_08.csv";
-    string strMergedOpalExceptionBaseName = "./Results/exception_opal_08_";
-    string strMergedRoamExceptionBaseName = "./Results/exception_roam_08_";
+    string strMergedOpalExceptionBaseName = "./Results/Exceptions/exception_opal_08_";
+    string strMergedRoamExceptionBaseName = "./Results/Exceptions/exception_roam_08_";
+    string strPuncExceptionBaseName = "./Results/Exceptions/exception_punctuality_08_";
 
     for (int i = 0; i < 31; i++) {
         string strDate = i < 9 ? "0" + to_string(i + 1) : to_string(i + 1);
@@ -116,8 +118,8 @@ int main(int argc, char* argv[]) {
 
         strDayODOutputNames.push_back("./Results/opal_roam_perod_08" + strDate + ".csv");
 
-        strOpalExceptionBaseNames.push_back("./Results/exception_opal_08" + strDate + "_");
-        strRoamExceptionBaseNames.push_back("./Results/exception_roam_08" + strDate + "_");
+        strOpalExceptionBaseNames.push_back("./Results/Exceptions/exception_opal_08" + strDate + "_");
+        strRoamExceptionBaseNames.push_back("./Results/Exceptions/exception_roam_08" + strDate + "_");
     }
 
 #if PER_STATION_PER_MONTH
@@ -170,6 +172,7 @@ int main(int argc, char* argv[]) {
         strMergedOpalExceptionBaseName);
 #endif
 #if OPAL_EXCEPTION_PER_DAY
+    cout << "Opal exceptions per day..." << endl;
     for (int i = 0; i < 2; i++) {
         vector<string> strInputNames1;
         strInputNames1.push_back(strOpalNames[i]);
@@ -185,7 +188,7 @@ int main(int argc, char* argv[]) {
         strMergedRoamExceptionBaseName);
 #endif
 #if ROAM_EXCEPTION_PER_DAY
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 31; i++) {
         vector<string> strInputNames1;
         strInputNames1.push_back(strRoamNames[i]);
 
@@ -193,4 +196,13 @@ int main(int argc, char* argv[]) {
     }
 
 #endif
+
+#if PUNC_EXCEPTION_PER_MONTH
+    vector<string> vecPuncFiles;
+    vecPuncFiles.push_back(puncFile);
+    TransportApplication::generatePuncExceptions(
+        vecPuncFiles, 
+        strPuncExceptionBaseName);
+#endif
+
 }

@@ -202,7 +202,31 @@ void TransportApplication::compareOpalAndRoamPerODPerDay(std::vector<std::string
     exportCountComparison(strOutputCSVName, mapOpalPerODCount, mapRoamPerODCount, "Opal,Count,Roam,Count");
 }
 
-void exportExceptions(string strOutputCSVBaseName, string strOutputCSVNameModifier, vector<int> vecCount, int totalRows, string strTitle) {
+void TransportApplication::compareOpalAndRoamPerLinePerDay(std::vector<std::string> strOpalInputCSVNames, std::vector<std::string> strRoamInputCSVNames, std::string strOutputCSVName) {
+    std::string strOutputCSVName) {
+    int nOpalCSVCount = strOpalInputCSVNames.size();
+    int nRoamCSVCount = strRoamInputCSVNames.size();
+    if (nOpalCSVCount != nRoamCSVCount) {
+        cout << "The csv name arrays given are not consistent: " << endl;
+        cout << "nOpalCSVCount: " << nOpalCSVCount << " nRoamCSVCount: " << nRoamCSVCount << endl;
+        return;
+    }
+
+    OpalTripAnalyser opal;
+    opal.setFiles(strOpalInputCSVNames);
+    opal.calculatePerLineCount();
+    map<string, vector<int> > mapOpalPerLineCount = opal.getPerLineCount();
+
+    RoamResultAnalyser roam;
+    roam.setFiles(strRoamInputCSVNames);
+    roam.calculatePerLineCount();
+    map<string, vector<int> > mapRoamPerLineCount = roam.getPerLineCount();
+
+    exportCountComparison(strOutputCSVName, mapOpalPerLineCount, mapRoamPerLineCount, "Opal,Count,Roam,Count");
+}
+
+
+void exportPerPersonExceptions(string strOutputCSVBaseName, string strOutputCSVNameModifier, vector<int> vecCount, int totalRows, string strTitle) {
     // float fSumInaccuracy = 0.0f;
     // float fAccuracy = 0.0f;
     // float fInaccuracy = 0.0f;
@@ -217,10 +241,10 @@ void exportExceptions(string strOutputCSVBaseName, string strOutputCSVNameModifi
     outfile << "," << endl;
 
     if (vecCount.size() > 0) {
-        outfile << "Rows," << vecCount[0] << endl;
+        outfile << "Rows," << vecCount[0] + 1 << endl;
 
         for (int i = 1; i < vecCount.size(); i++) {
-            outfile << "," << vecCount[i] << endl;
+            outfile << "," << vecCount[i] + 1 << endl;
         }
     }
 
@@ -238,9 +262,9 @@ void TransportApplication::generateOpalExceptions(std::vector<std::string> strOp
     // vector<int> vecUnknownOffCount = opal.getUnknownOffCount();
     // vector<int> vecSameOnOffCount = opal.getSameOnOffCount();
 
-    exportExceptions(strOutputCSVBaseName, "unknown_on_stats.csv", opal.getUnknownOnCount(), opal.getTotalRowCount(), "Opal UNKNOWN tap on stats");
-    exportExceptions(strOutputCSVBaseName, "unknown_off_stats.csv", opal.getUnknownOffCount(), opal.getTotalRowCount(), "Opal UNKNOWN tap off stats");
-    exportExceptions(strOutputCSVBaseName, "same_on_off_stats.csv", opal.getSameOnOffCount(), opal.getTotalRowCount(), "Opal same tap on/off stats");
+    exportPerPersonExceptions(strOutputCSVBaseName, "unknown_on_stats.csv", opal.getUnknownOnCount(), opal.getTotalRowCount(), "Opal UNKNOWN tap on stats");
+    exportPerPersonExceptions(strOutputCSVBaseName, "unknown_off_stats.csv", opal.getUnknownOffCount(), opal.getTotalRowCount(), "Opal UNKNOWN tap off stats");
+    exportPerPersonExceptions(strOutputCSVBaseName, "same_on_off_stats.csv", opal.getSameOnOffCount(), opal.getTotalRowCount(), "Opal same tap on/off stats");
 }
 
 void TransportApplication::generateRoamExceptions(std::vector<std::string> strRoamInputCSVNames, std::string strOutputCSVBaseName) {
@@ -248,20 +272,33 @@ void TransportApplication::generateRoamExceptions(std::vector<std::string> strRo
     roam.setFiles(strRoamInputCSVNames);
     roam.calculateExceptions();
 
-    exportExceptions(strOutputCSVBaseName, "more_than_2_trips_stats.csv", roam.getMT2TripsCount(), roam.getTotalRowCount(), "Roam more than 2 trips stats");
+    exportPerPersonExceptions(strOutputCSVBaseName, "more_than_2_trips_stats.csv", roam.getMT2TripsCount(), roam.getTotalRowCount(), "Roam more than 2 trips stats");
 }
 
-void TransportApplication::generatePuncExceptions(std::vector<std::string> strOpalInputCSVNames, std::string strOutputCSVNameBaseName) {
-    // PrePuncProcessor ppp;
-    // opal.setFiles(strOpalInputCSVNames);
-    // opal.calculateExceptions();
-    // vector<int> vecUnknownOnCount = opal.getUnknownOnCount();
-    // vector<int> vecUnknownOffCount = opal.getUnknownOffCount();
-    // vector<int> vecSameOnOffCount = opal.getSameOnOffCount();
+void exportPuncExceptions(string strOutputCSVBaseName, string strOutputCSVNameModifier, vector<pair<int, string> > vec, string strTitle) {
+    ofstream outfile;
 
-    // exportExceptions(strOutputCSVBaseName, "unknown_on_stats.csv", vecUnknownOnCount, opal.getTotalRowCount(), "Opal UNKNOWN tap on stats");
-    // exportExceptions(strOutputCSVBaseName, "unknown_off_stats.csv", vecUnknownOffCount, opal.getTotalRowCount(), "Opal UNKNOWN tap off stats");
-    // exportExceptions(strOutputCSVBaseName, "same_on_off_stats.csv", vecSameOnOffCount, opal.getTotalRowCount(), "Opal same tap on/off stats");
+    outfile.open(strOutputCSVBaseName + strOutputCSVNameModifier);
+    outfile << strTitle << endl;
+    outfile << "Row number";
+    outfile << ",Business Centre,Service Date,Segment Direction,Trip Name,Service Type,Service Line,Trip Zone,Orig. Station,Dest. Station,Trip Dprt Status,Trip Arrv Status,Leading Set Number,Leading Set Type,Node Seq Order,Planned Stop Node,Planned Stop Station,Planned Station Dprt Time,Planned Station Arrv Time,Actual Stop Node,Actual Stop Station,Actual Station Dprt Time,Actual Station Arrv Time,Station Arrv Status,Station Dprt Status";
+    outfile << endl;
+
+    for (int i = 0; i < vec.size(); i++) {
+        outfile << vec[i].first + 1 << "," << vec[i].second << endl;
+    }
+
+    outfile.close();
+}
+
+void TransportApplication::generatePuncExceptions(std::vector<std::string> strPuncInputCSVNames, std::string strOutputCSVBaseName) {
+    PrePuncProcessor ppp;
+    ppp.setFiles(strPuncInputCSVNames);
+    ppp.calculateExceptions();
+
+    exportPuncExceptions(strOutputCSVBaseName, "unknown_station_list.csv", ppp.getExceptionUnknownStations(), "Punctuality Unknown station List");
+    exportPuncExceptions(strOutputCSVBaseName, "missing_actual_stop_list.csv", ppp.getExceptionMissing(), "Punctuality Missing Actual Stop List");
+    exportPuncExceptions(strOutputCSVBaseName, "dprt_later_than_arrv_list.csv", ppp.getExceptionDprtLTArrv(), "Punctuality Departure Time Later Than Arrival Time List");
 }
 
 void exportLines(string strFileName, map<string, Line> mapLines, string strTitle) {

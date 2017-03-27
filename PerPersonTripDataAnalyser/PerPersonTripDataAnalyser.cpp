@@ -533,7 +533,6 @@ void RoamResultAnalyser::calculatePerODCount() {
 void RoamResultAnalyser::calculateExceptions() {
     ifstream infile;
     for (int i = 0; i < m_strInfileNames.size(); i++) {
-        if (i == 2) break;
         infile.open(m_strInfileNames[i].c_str());
         if (!infile.is_open()) {
             cout << "File " << m_strInfileNames[i] << " couldn't be opened." << endl;
