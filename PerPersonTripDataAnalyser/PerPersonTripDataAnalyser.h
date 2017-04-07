@@ -24,25 +24,32 @@ public:
 
 class PerPersonTripDataAnalyser {
 public:
-	// PerPersonTripDataAnalyser();
+	PerPersonTripDataAnalyser();
 	bool setFiles(std::vector<std::string> strFileNames);
+	void setStationLines(std::map<std::string, std::vector<std::string> > mapStationLines);
 	void calculatePerStationCount();
 	void calculatePerODCount();
+	void calculatePerLineCount();
 	void calculateExceptions();
 	std::map<std::string, std::vector<int> > getOnPerStationCount();
 	std::map<std::string, std::vector<int> > getOffPerStationCount();
 	std::map<std::string, std::vector<int> > getPerODCount();
+	std::map<std::string, std::vector<int> > getPerLineCount();
 	int getTotalRowCount();
 	// std::map<std::string, std::vector<int> > getExceptions();
 protected:
 	void updatePerStationCount(std::string onStopName, std::string offStopName, int row);
 	void updatePerODCount(std::string onStopName, std::string offStopName, int row);
+	void updatePerLineCount(std::string strOnStopName, std::string strOffStopName, int nRow);
 protected:
 	std::map<std::string, std::vector<int> > m_mapOnCountPerStation;
 	std::map<std::string, std::vector<int> > m_mapOffCountPerStation;
 	std::map<std::string, std::vector<int> > m_mapCountPerOD;
+	std::map<std::string, std::vector<int> > m_mapCountPerLine;
 
 	std::vector<std::string> m_strInfileNames;
+
+	std::map<std::string, std::vector<std::string> > m_mapStationLines;
 
 	int m_nTotalRows;
 
@@ -54,6 +61,7 @@ public:
 	OpalTripAnalyser();
 	void calculatePerStationCount();
 	void calculatePerODCount();
+	void calculatePerLineCount();
 	void calculateExceptions();
 
 	std::vector<int> getUnknownOnCount();
@@ -87,6 +95,7 @@ public:
 	RoamResultAnalyser();
 	void calculatePerStationCount();
 	void calculatePerODCount();
+	void calculatePerLineCount();
 	void calculateExceptions();
 
 	std::vector<int> getMT2TripsCount();

@@ -6,21 +6,24 @@
 #include <string>
 using namespace std;
 
-#define PER_STATION_PER_DAY 0
 #define PER_STATION_PER_MONTH 0
+#define PER_STATION_PER_DAY 0
 
-#define PER_OD_PER_DAY 0
 #define PER_OD_PER_MONTH 0
+#define PER_OD_PER_DAY 0
+
+#define PER_LINE_PER_MONTH 1
+#define PER_LINE_PER_DAY 0
 
 #define EXTRACT_LINE_STATIONS 0
 
-#define OPAL_EXCEPTION_PER_MONTH 1
-#define OPAL_EXCEPTION_PER_DAY 1
+#define OPAL_EXCEPTION_PER_MONTH 0
+#define OPAL_EXCEPTION_PER_DAY 0
 
-#define ROAM_EXCEPTION_PER_MONTH 1
-#define ROAM_EXCEPTION_PER_DAY 1
+#define ROAM_EXCEPTION_PER_MONTH 0
+#define ROAM_EXCEPTION_PER_DAY 0
 
-#define PUNC_EXCEPTION_PER_MONTH 1
+#define PUNC_EXCEPTION_PER_MONTH 0
 int main(int argc, char* argv[]) {
 	string puncFile = "/media/nlp/Maxtor/Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv";
 	string opalFile = "/media/nlp/Maxtor/Transport/Opal/JS_ALL_V.20160801_20160816.csvp";
@@ -99,11 +102,15 @@ int main(int argc, char* argv[]) {
     vector<string> strDayOnOutputNames;
     vector<string> strDayOffOutputNames;
     vector<string> strDayODOutputNames;
+    vector<string> strDayLineOutputNames;
     vector<string> strOpalExceptionBaseNames;
     vector<string> strRoamExceptionBaseNames;
+
     string strMergedOnOutputName = "./Results/opal_roam_perstation_08_on.csv";
     string strMergedOffOutputName = "./Results/opal_roam_perstation_08_off.csv";
     string strMergedODOutputName = "./Results/opal_roam_perod_08.csv";
+    string strMergedLineOutputName = "./Results/opal_roam_perline_08.csv";
+
     string strMergedOpalExceptionBaseName = "./Results/Exceptions/exception_opal_08_";
     string strMergedRoamExceptionBaseName = "./Results/Exceptions/exception_roam_08_";
     string strPuncExceptionBaseName = "./Results/Exceptions/exception_punctuality_08_";
@@ -117,6 +124,8 @@ int main(int argc, char* argv[]) {
         strDayOffOutputNames.push_back("./Results/opal_roam_perstation_08" + strDate + "_off.csv");
 
         strDayODOutputNames.push_back("./Results/opal_roam_perod_08" + strDate + ".csv");
+
+        strDayLineOutputNames.push_back("./Results/opal_roam_perline_08" + strDate + ".csv");
 
         strOpalExceptionBaseNames.push_back("./Results/Exceptions/exception_opal_08" + strDate + "_");
         strRoamExceptionBaseNames.push_back("./Results/Exceptions/exception_roam_08" + strDate + "_");
@@ -166,7 +175,31 @@ int main(int argc, char* argv[]) {
     TransportApplication::generateAllLines("/media/nlp/Maxtor/Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv", "all_lines.csv");
 #endif
 
+#if PER_LINE_PER_MONTH
+    map<string, vector<string> > mapStationLines = TransportApplication::importAllStationLines("all_lines.csv");
+    // Per line - whole aug into one csv
+    TransportApplication::compareOpalAndRoamPerLinePerDay(
+        strOpalNames, 
+        strRoamNames, 
+        strMergedLineOutputName, mapStationLines);
+#endif
+#if PER_LINE_PER_DAY
+    // Per line - each day of aug into one csv
+
+    map<string, vector<string> > mapStationLines = TransportApplication::importAllStationLines("all_lines.csv");
+
+    for (int i = 0; i < 31; i++) {
+        vector<string> strInputNames1;
+        strInputNames1.push_back(strOpalNames[i]);
+        vector<string> strInputNames2;
+        strInputNames2.push_back(strRoamNames[i]);
+
+        TransportApplication::compareOpalAndRoamPerLinePerDay(strInputNames1, strInputNames2, strDayLineOutputNames[i], mapStationLines);
+    }
+#endif
+
 #if OPAL_EXCEPTION_PER_MONTH
+    cout << "Opal exceptions per month..." << endl;
     TransportApplication::generateOpalExceptions(
         strOpalNames, 
         strMergedOpalExceptionBaseName);
@@ -183,11 +216,13 @@ int main(int argc, char* argv[]) {
 #endif
 
 #if ROAM_EXCEPTION_PER_MONTH
+    cout << "Roam exceptions per month..." << endl;
     TransportApplication::generateRoamExceptions(
         strRoamNames, 
         strMergedRoamExceptionBaseName);
 #endif
 #if ROAM_EXCEPTION_PER_DAY
+    cout << "Roam exceptions per day..." << endl;
     for (int i = 0; i < 31; i++) {
         vector<string> strInputNames1;
         strInputNames1.push_back(strRoamNames[i]);
@@ -198,6 +233,7 @@ int main(int argc, char* argv[]) {
 #endif
 
 #if PUNC_EXCEPTION_PER_MONTH
+    cout << "Punc exceptions per month..." << endl;
     vector<string> vecPuncFiles;
     vecPuncFiles.push_back(puncFile);
     TransportApplication::generatePuncExceptions(

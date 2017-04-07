@@ -202,8 +202,66 @@ void TransportApplication::compareOpalAndRoamPerODPerDay(std::vector<std::string
     exportCountComparison(strOutputCSVName, mapOpalPerODCount, mapRoamPerODCount, "Opal,Count,Roam,Count");
 }
 
-void TransportApplication::compareOpalAndRoamPerLinePerDay(std::vector<std::string> strOpalInputCSVNames, std::vector<std::string> strRoamInputCSVNames, std::string strOutputCSVName) {
-    std::string strOutputCSVName) {
+map<string, vector<string> > TransportApplication::importAllStationLines(std::string strAllLinesFileName) {
+    ifstream infile;
+    infile.open(strAllLinesFileName.c_str());
+    if (!infile.is_open()) {
+        cout << "File " << strAllLinesFileName << " couldn't be opened." << endl;
+        return map<string, vector<string>>();
+    }
+
+    string line = "";
+    string value = "";
+
+    map<string, vector<string> > mapAllStationLines;
+    string strLineName = "";
+
+    int r = 1; // Avoid first row 
+    struct tm tm = {};
+    getline(infile, line);
+    while (getline(infile, line)) {
+        int c = 0;
+        stringstream ss(line);
+
+        string strCol1 = "";
+        string strCol2 = "";
+        string strCol3 = "";
+        string strTypeName = "";
+        string strStationName = "";
+
+        getline(ss, strCol1, ',');
+        getline(ss, strCol2, ',');
+        getline(ss, strCol3, ',');
+
+        if (strCol1 != "") {
+            strLineName = strCol1;
+            continue;
+        }
+        else if (strCol3 == "") {
+            continue;
+        }
+        else {
+            strStationName = strCol3;
+            map<string, vector<string> >::iterator it = mapAllStationLines.find(strStationName);
+            if (it != mapAllStationLines.end()) {
+                vector<string> &vec = it->second;
+                vec.push_back(strLineName);
+                // cout << "found " << strStationName << " " << vec.size() << endl;
+            }
+            else {
+                vector<string> vec;
+                vec.push_back(strLineName);
+                mapAllStationLines.insert(pair<string, vector<string> >(strStationName, vec));
+                // cout << "not found " << strStationName << endl;
+            }
+        }
+    }
+
+    return mapAllStationLines;
+}
+
+void TransportApplication::compareOpalAndRoamPerLinePerDay(std::vector<std::string> strOpalInputCSVNames, std::vector<std::string> strRoamInputCSVNames, 
+    std::string strOutputCSVName, std::map<std::string, vector<std::string> > mapStationLines) {
     int nOpalCSVCount = strOpalInputCSVNames.size();
     int nRoamCSVCount = strRoamInputCSVNames.size();
     if (nOpalCSVCount != nRoamCSVCount) {
@@ -214,11 +272,15 @@ void TransportApplication::compareOpalAndRoamPerLinePerDay(std::vector<std::stri
 
     OpalTripAnalyser opal;
     opal.setFiles(strOpalInputCSVNames);
+    opal.setStationLines(mapStationLines);
+
     opal.calculatePerLineCount();
+
     map<string, vector<int> > mapOpalPerLineCount = opal.getPerLineCount();
 
     RoamResultAnalyser roam;
     roam.setFiles(strRoamInputCSVNames);
+    roam.setStationLines(mapStationLines);
     roam.calculatePerLineCount();
     map<string, vector<int> > mapRoamPerLineCount = roam.getPerLineCount();
 
