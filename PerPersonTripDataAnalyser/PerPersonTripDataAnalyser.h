@@ -94,6 +94,7 @@ class RoamResultAnalyser: public PerPersonTripDataAnalyser {
 public:
 	RoamResultAnalyser();
 	void calculatePerStationCount();
+	void calculatePerStationCountWithTransfers();
 	void calculatePerODCount();
 	void calculatePerLineCount();
 	void calculateExceptions();
@@ -105,6 +106,7 @@ private:
 
 	int m_iOriginStopCol;
 	int m_iDestStopCol;
+	int m_iTransferStationCol;
 	int m_iFirstTripLineCol;
 
 	std::vector<int> m_vecMT2TripsCount;

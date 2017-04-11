@@ -31,60 +31,60 @@ import sys
 # finally:
 #     f.close()
 
-f = open("/media/nlp/Maxtor/Transport/Roam/Person/FINAL_MERGE_TABLE-01-08-2016_matched.csv", 'rt')
-try:
-	reader = csv.reader(f)
-	count = 0
-	stationNameList = {}
-	stationNameListD = {}
-	Rcount=0
-	# print len(list(reader)[1:])
-	for row in list(reader)[1:]:
-		if row[4] == '2 or more interchanges required':
-			Rcount+=1
+stationNameList = {}
+stationNameListD = {}
+Rcount=0
+totalCount =0
 
-			# st = row[0].split('|')
-			#if len(st)>60 and st[10].lower()=='train' :
-			startStation= row[2] #12
-			endStation=row[1]
+month = '08'
+mypath= "/media/nlp/Maxtor/Transport/Roam/Person/"
+from os import listdir
+from os.path import isfile, join
+onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+onlyfiles=sorted(onlyfiles)
+for filePath in onlyfiles:
+	if filePath[-4:]=='.csv' and filePath.split('-')[2]==month:
+		newFilePath = "/media/nlp/Maxtor/Transport/Roam/Person/"+filePath
+		print newFilePath
+		f = open(newFilePath, 'rt')
+		try:
+			reader = csv.reader(f)
+			count = 0
 
-			# 	if  st[60]=='Sydenham Station':
-			# if 'NA' == row[3]:
-			# #one train
-			# # print row[12],row[15]
+			for row in list(reader)[1:]:
+				if row[4] == '2 or more interchanges required':
+					Rcount+=1
+				else:
 
-			# 	endStation=row[15]
-			# else:
-			# #two trains
+					startStation= row[2] #12
+					endStation=row[1]
 
-			# # print row[12],row[22]
-			# 	endStation=row[22]
-			# # if startStation == 'Hexham':
-			# 	print startStation,row[12],Rcount,row
-			#print st[54],st[60],count
-			# count+=1
-			if startStation not in stationNameList:
-				stationNameList[startStation] = 0
-			if endStation not in stationNameListD:
-				stationNameListD[endStation] = 0
-			stationNameList[startStation] += 1		
-			stationNameListD[endStation] += 1
-		# if 	startStation == "Aberdeen":
-		# print startStation,endStation
-	count = 2
-	totalCount =0 
-	for i in sorted(stationNameListD.iterkeys()):
-	#for i in stationNameList:
-		print count,i,stationNameListD[i]
-		totalCount+=	stationNameListD[i]
-		count+=1
-	print "Total",totalCount,"RowCount:",Rcount
-    # print count
-    # print len(stationNameList)
-    # count = 2
-    # for i in sorted(stationNameListD.iterkeys()):
-    # #for i in stationNameList:
-    # 	print count,i,stationNameListD[i]
-    # 	count+=1
-finally:
-    f.close()
+					if startStation not in stationNameList:
+						stationNameList[startStation] = 0
+					if endStation not in stationNameListD:
+						stationNameListD[endStation] = 0
+					stationNameList[startStation] += 1		
+					stationNameListD[endStation] += 1
+				totalCount+=1
+
+			count = 2
+			
+
+		finally:
+		    f.close()
+
+print "Tap off Data" 
+f = open('../JasonVerification_deleteme/python_resultsTapOffAugust.csv', 'rt')
+for i in sorted(stationNameListD.iterkeys()):
+	f.write(i +','+str(stationNameListD[i])+'\n')
+	print count,i,stationNameListD[i]
+	count+=1
+f.close()
+print "Tap on Data" 
+f = open('../JasonVerification_deleteme/python_resultTapOnAugust.csv', 'rt')
+for i in sorted(stationNameList.iterkeys()):
+	f.write(i +','+str(stationNameList[i])+'\n')
+	print count,i,stationNameList[i]
+	count+=1
+f.close()
+print "Total",totalCount,"RowCount:",Rcount

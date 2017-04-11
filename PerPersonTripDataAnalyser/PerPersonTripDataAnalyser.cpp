@@ -481,6 +481,7 @@ void OpalTripAnalyser::updateSameOnOffCount(int nRow) {
 RoamResultAnalyser::RoamResultAnalyser() {
     m_iOriginStopCol = 2;
     m_iDestStopCol = 1;
+    m_iTransferStationCol = 19;
     m_iFirstTripLineCol = 40;
 }
 
@@ -551,6 +552,106 @@ void RoamResultAnalyser::calculatePerStationCount() {
                 onStopName = onStopName.substr(1, onStopName.length() - 2);
                 offStopName = offStopName.substr(1, offStopName.length() - 2);
                 updatePerStationCount(onStopName, offStopName, r);
+            }
+            else {
+                // m_mapExceptions.insert(pair<string, vector<int> >(m_strExceptionNotAbleToFindPath, r));
+                // cout << "NA: " << r << " ";
+            }
+            // cout << onStopName << " " << offStopName << endl;
+
+            r++;
+        }
+
+        m_nTotalRows += r;
+
+        infile.close();
+    }
+}
+
+void RoamResultAnalyser::calculatePerStationCountWithTransfers() {
+    ifstream infile;
+    for (int i = 0; i < m_strInfileNames.size(); i++) {
+        infile.open(m_strInfileNames[i].c_str());
+        if (!infile.is_open()) {
+            cout << "File " << m_strInfileNames[i] << " couldn't be opened." << endl;
+            return;
+        }
+
+        string value;
+        string line;
+
+        int r = 1; // Avoid first row 
+        struct tm tm = {};
+        getline(infile, line);
+        while (getline(infile, line)) {
+            int c = 0;
+            stringstream ss(line);
+
+            string onStopName = "";
+            string offStopName = "";
+            string strTransferStationName = "";
+            string strFirstTripLineName = "";
+
+            while(c < m_iDestStopCol) {
+                getline(ss, value, ',');
+                c++;
+            }    
+
+            // off stop
+            getline(ss, value, ',');
+            offStopName = value;
+            c++;
+
+            while(c < m_iOriginStopCol) {
+                getline(ss, value, ',');
+                // cout << c << " " << value << endl;
+                c++;
+            }
+
+            // on stop
+            getline(ss, value, ',');
+            // cout << c << " " << value << endl;
+            onStopName = value;
+            c++;
+
+            while(c < m_iTransferStationCol) {
+                getline(ss, value, ',');
+                // cout << c << " " << value << endl;
+                c++;
+            }
+
+            // Transfer station
+            getline(ss, value, ',');
+            // cout << c << " " << value << endl;
+            strTransferStationName = value;
+            c++;
+
+            while(c < m_iFirstTripLineCol) {
+                getline(ss, value, ',');
+                // cout << c << " " << value << endl;
+                c++;
+            }
+
+            // First trip line
+            getline(ss, value, ',');
+            // cout << c << " " << value << endl;
+            strFirstTripLineName = value;
+            c++;
+            
+            while (getline(ss, value, ',')) {
+                // cout << r << " " << c << " " << value << endl;
+                c++;
+            }
+
+            if (strFirstTripLineName != "NA") {
+                onStopName = onStopName.substr(1, onStopName.length() - 2);
+                offStopName = offStopName.substr(1, offStopName.length() - 2);
+                updatePerStationCount(onStopName, offStopName, r);
+                if (strTransferStationName != "NA") {
+                    strTransferStationName = strTransferStationName.substr(1, strTransferStationName.length() - 2);
+                    cout << strTransferStationName << endl;
+                    updatePerStationCount(strTransferStationName, strTransferStationName, r);
+                }
             }
             else {
                 // m_mapExceptions.insert(pair<string, vector<int> >(m_strExceptionNotAbleToFindPath, r));

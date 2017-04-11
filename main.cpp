@@ -12,7 +12,7 @@ using namespace std;
 #define PER_OD_PER_MONTH 0
 #define PER_OD_PER_DAY 0
 
-#define PER_LINE_PER_MONTH 1
+#define PER_LINE_PER_MONTH 0
 #define PER_LINE_PER_DAY 0
 
 #define EXTRACT_LINE_STATIONS 0
@@ -24,6 +24,9 @@ using namespace std;
 #define ROAM_EXCEPTION_PER_DAY 0
 
 #define PUNC_EXCEPTION_PER_MONTH 0
+
+#define ROAM_PERSON_VS_STOP_PER_STATION 1
+
 int main(int argc, char* argv[]) {
 	string puncFile = "/media/nlp/Maxtor/Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv";
 	string opalFile = "/media/nlp/Maxtor/Transport/Opal/JS_ALL_V.20160801_20160816.csvp";
@@ -97,6 +100,40 @@ int main(int argc, char* argv[]) {
         "FINAL_MERGE_TABLE-31-08-2016_matched.csv",
     };
 
+    string roamPerStopFileNames[] = {
+        "Final OUTPUT TPA-01-08-2016_matched.csv",
+        "Final OUTPUT TPA-02-08-2016_matched.csv",
+        "Final OUTPUT TPA-03-08-2016_matched.csv",
+        "Final OUTPUT TPA-04-08-2016_matched.csv",
+        "Final OUTPUT TPA-05-08-2016_matched.csv",
+        "Final OUTPUT TPA-06-08-2016_matched.csv",
+        "Final OUTPUT TPA-07-08-2016_matched.csv",
+        "Final OUTPUT TPA-08-08-2016_matched.csv",
+        "Final OUTPUT TPA-09-08-2016_matched.csv",
+        "Final OUTPUT TPA-10-08-2016_matched.csv",
+        "Final OUTPUT TPA-11-08-2016_matched.csv",
+        "Final OUTPUT TPA-12-08-2016_matched.csv",
+        "Final OUTPUT TPA-13-08-2016_matched.csv",
+        "Final OUTPUT TPA-14-08-2016_matched.csv",
+        "Final OUTPUT TPA-15-08-2016_matched.csv",
+        "Final OUTPUT TPA-16-08-2016_matched.csv",
+        "Final OUTPUT TPA-17-08-2016_matched.csv",
+        "Final OUTPUT TPA-18-08-2016_matched.csv",
+        "Final OUTPUT TPA-19-08-2016_matched.csv",
+        "Final OUTPUT TPA-20-08-2016_matched.csv",
+        "Final OUTPUT TPA-21-08-2016_matched.csv",
+        "Final OUTPUT TPA-22-08-2016_matched.csv",
+        "Final OUTPUT TPA-23-08-2016_matched.csv",
+        "Final OUTPUT TPA-24-08-2016_matched.csv",
+        "Final OUTPUT TPA-25-08-2016_matched.csv",
+        "Final OUTPUT TPA-26-08-2016_matched.csv",
+        "Final OUTPUT TPA-27-08-2016_matched.csv",
+        "Final OUTPUT TPA-28-08-2016_matched.csv",
+        "Final OUTPUT TPA-29-08-2016_matched.csv",
+        "Final OUTPUT TPA-30-08-2016_matched.csv",
+        "Final OUTPUT TPA-31-08-2016_matched.csv",
+    };
+
     vector<string> strOpalNames;
     vector<string> strRoamNames;
     vector<string> strDayOnOutputNames;
@@ -106,10 +143,17 @@ int main(int argc, char* argv[]) {
     vector<string> strOpalExceptionBaseNames;
     vector<string> strRoamExceptionBaseNames;
 
+    vector<string> strRoamPerStopNames;
+    vector<string> strRoamPerStopDayOnOutputNames;
+    vector<string> strRoamPerStopDayOffOutputNames;
+
     string strMergedOnOutputName = "./Results/opal_roam_perstation_08_on.csv";
     string strMergedOffOutputName = "./Results/opal_roam_perstation_08_off.csv";
     string strMergedODOutputName = "./Results/opal_roam_perod_08.csv";
     string strMergedLineOutputName = "./Results/opal_roam_perline_08.csv";
+
+    string strMergedRoamPerStopOnOutputName = "./Results/roam_pp_vs_ps_per_station_08_on.csv";
+    string strMergedRoamPerStopOffOutputName = "./Results/roam_pp_vs_ps_per_station_08_off.csv";
 
     string strMergedOpalExceptionBaseName = "./Results/Exceptions/exception_opal_08_";
     string strMergedRoamExceptionBaseName = "./Results/Exceptions/exception_roam_08_";
@@ -129,6 +173,10 @@ int main(int argc, char* argv[]) {
 
         strOpalExceptionBaseNames.push_back("./Results/Exceptions/exception_opal_08" + strDate + "_");
         strRoamExceptionBaseNames.push_back("./Results/Exceptions/exception_roam_08" + strDate + "_");
+
+        strRoamPerStopNames.push_back("/media/nlp/Maxtor/Transport/Roam/Stop/" + roamPerStopFileNames[i]);
+        strRoamPerStopDayOnOutputNames.push_back("./Results/roam_pp_vs_ps_per_station_08" + strDate + "_on.csv");
+        strRoamPerStopDayOffOutputNames.push_back("./Results/roam_pp_vs_ps_per_station_08" + strDate + "_off.csv");
     }
 
 #if PER_STATION_PER_MONTH
@@ -149,7 +197,6 @@ int main(int argc, char* argv[]) {
 
         TransportApplication::compareOpalAndRoamPerStationPerDay(strInputNames1, strInputNames2, strDayOnOutputNames[i], strDayOffOutputNames[i]);
     }
-
 #endif
 
 #if PER_OD_PER_MONTH
@@ -239,6 +286,25 @@ int main(int argc, char* argv[]) {
     TransportApplication::generatePuncExceptions(
         vecPuncFiles, 
         strPuncExceptionBaseName);
+#endif
+
+#if ROAM_PERSON_VS_STOP_PER_STATION
+    // Per station - whole aug into one csv
+    // TransportApplication::comparerRoamPPAndRoamPSPerStationPerDay(
+    //     strRoamPerStopNames, 
+    //     strRoamNames, 
+    //     strMergedRoamPerStopOnOutputName, 
+    //     strMergedRoamPerStopOffOutputName);
+
+    // Per station - each day of aug into one csv
+    for (int i = 0; i < 1; i++) {
+        vector<string> strInputNames1;
+        strInputNames1.push_back(strRoamNames[i]);
+        vector<string> strInputNames2;
+        strInputNames2.push_back(strRoamPerStopNames[i]);
+
+        TransportApplication::comparerRoamPPAndRoamPSPerStationPerDay(strInputNames1, strInputNames2, strRoamPerStopDayOnOutputNames[i], strRoamPerStopDayOffOutputNames[i]);
+    }
 #endif
 
 }

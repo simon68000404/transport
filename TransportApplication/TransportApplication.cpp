@@ -1,5 +1,6 @@
 #include "TransportApplication.h"
 #include "../PerPersonTripDataAnalyser/PerPersonTripDataAnalyser.h"
+#include "../PerStopDataAnalyser/PerStopDataAnalyser.h"
 #include "../PrePuncProcessor/PrePuncProcessor.h"
 
 #include <iostream>
@@ -478,4 +479,111 @@ void TransportApplication::generateAllLines(string strPuncFileName, string strOu
     infile.close();
 
     exportLines(strOutputCSVName, mapLines, "Service Line,Service Type,Stops");
+}
+
+map<string, unsigned int> sumUpVecCountToUIntCount(map<string, vector<int> > mapVecCount) {
+    map<string, unsigned int> mapResult;
+    for (map<string, vector<int> >::iterator it = mapVecCount.begin(); it != mapVecCount.end(); it++) {
+        string strKey = it->first;
+        vector<int> vecCounts = it->second;
+        unsigned int count = 0;
+        for (int i = 0; i < vecCounts.size(); i++) {
+            count += vecCounts[i];
+        }
+        mapResult.insert(pair<string, unsigned int>(strKey, count));
+    }
+    return mapResult;
+}
+
+map<string, unsigned int> sumUpVecRowToUIntCount(map<string, vector<int> > mapVecRows) {
+    map<string, unsigned int> mapResult;
+    for (map<string, vector<int> >::iterator it = mapVecRows.begin(); it != mapVecRows.end(); it++) {
+        string strKey = it->first;
+        vector<int> vecRows = it->second;
+        mapResult.insert(pair<string, unsigned int>(strKey, vecRows.size()));
+    }
+    return mapResult;
+}
+
+
+void exportCountComparison(string fileName, map<string, unsigned int> &map1, map<string, unsigned int> &map2, string strTitle) {
+    float fSumInaccuracy = 0.0f;
+    float fAccuracy = 0.0f;
+    float fInaccuracy = 0.0f;
+    ofstream outfile;
+
+    outfile.open(fileName);
+    outfile << strTitle << endl;
+
+    for (map<string, unsigned int>::iterator it = map1.begin(); it != map1.end(); it++) {
+        string strKey = it->first;
+        unsigned int count1 = it->second;
+
+        map<string, unsigned int>::iterator it2 = map2.find(strKey);
+        if (it2 != map2.end()) {
+            unsigned int count2 = it2->second;
+            fAccuracy = float(count2)/float(count1);
+            fInaccuracy = 1 - fAccuracy;
+            outfile << strKey << ", " << count1 << ", " << it2->first << ", " << count2 << ", " << fAccuracy << ", " << fInaccuracy << endl;
+        }
+        else {
+            fAccuracy = 0;
+            fInaccuracy = 1;
+            outfile << strKey << ", " << count1 << ", " << strKey << ", " << 0 << ", " << 0 << ", " << 1 << endl;
+        }
+
+        fSumInaccuracy += fInaccuracy;
+    }
+
+    outfile << ",,,,," << fSumInaccuracy/map1.size() << endl;
+
+    outfile.close();
+}
+
+void TransportApplication::comparerRoamPPAndRoamPSPerStationPerDay(std::vector<std::string> strRoamPersonInputCSVNames, std::vector<std::string> strRoamStopInputCSVNames, std::string strOnOutputCSVName, std::string strOffOutputCSVName) {
+    int nRoamPersonCSVCount = strRoamPersonInputCSVNames.size();
+    int nRoamStopCSVCount = strRoamStopInputCSVNames.size();
+
+    if (nRoamPersonCSVCount != nRoamStopCSVCount) {
+        cout << "The csv name arrays given are not consistent: " << endl;
+        cout << "nRoamPersonCSVCount: " << nRoamPersonCSVCount << " nRoamStopCSVCount: " << nRoamStopCSVCount << endl;
+        return;
+    }
+
+    RoamResultAnalyser roam;
+    roam.setFiles(strRoamPersonInputCSVNames);
+    roam.calculatePerStationCountWithTransfers();
+    map<string, unsigned int> mapOnRoamCount = sumUpVecRowToUIntCount(roam.getOnPerStationCount());
+    map<string, unsigned int> mapOffRoamCount = sumUpVecRowToUIntCount(roam.getOffPerStationCount());
+
+    RoamPerStopResultAnalyser roamPerStop;
+    roamPerStop.setFiles(strRoamStopInputCSVNames);
+    roamPerStop.calculatePerStationCount();
+    map<string, unsigned int> mapOnRoamPerStopCount = sumUpVecCountToUIntCount(roamPerStop.getOnPerStationCount());
+    map<string, unsigned int> mapOffRoamPerStopCount = sumUpVecCountToUIntCount(roamPerStop.getOffPerStationCount());
+
+    exportCountComparison(strOnOutputCSVName, mapOnRoamCount, mapOnRoamPerStopCount, "Per Person Roam,Count,Per Stop Roam,Count");
+    exportCountComparison(strOffOutputCSVName, mapOffRoamCount, mapOffRoamPerStopCount, "Per Person Roam,Count,Per Stop Roam,Count");
+}
+
+/* Actually opal and cvm are not comparable to each other since cvm per stop data contains transfer the deducted stations, while opal is just raw tap on/off without transfer.
+ * Haven't tried to really run this, will wait for discussion.
+ */
+void TransportApplication::compareOpalAndCvmPerStationPerDay(vector<string> strOpalInputCSVNames, vector<string> strCvmInputCSVNames, 
+    string strOnOutputCSVName, string strOffOutputCSVName) {
+
+    OpalTripAnalyser opal;
+    opal.setFiles(strOpalInputCSVNames);
+    opal.calculatePerStationCount();
+    map<string, unsigned int> mapOnOpalCount = sumUpVecRowToUIntCount(roam.getOnPerStationCount());
+    map<string, unsigned int> mapOffOpalCount = sumUpVecRowToUIntCount(roam.getOffPerStationCount());
+
+    CvmPerStopResultAnalyser cvmPerStop;
+    cvmPerStop.setFiles(strCvmInputCSVNames);
+    cvmPerStop.calculatePerStationCount();
+    map<string, unsigned int> mapOnCvmPerStopCount = sumUpVecCountToUIntCount(cvmPerStop.getOnPerStationCount());
+    map<string, unsigned int> mapOffCvmPerStopCount = sumUpVecCountToUIntCount(cvmPerStop.getOffPerStationCount());
+
+    exportCountComparison(strOnOutputCSVName, mapOnOpalPerStationCount, mapOnCvmPerStopCount, "Opal,Count,Cvm,Count");
+    exportCountComparison(strOffOutputCSVName, mapOffOpalPerStationCount, mapOffCvmPerStopCount, "Opal,Count,Cvm,Count");
 }
