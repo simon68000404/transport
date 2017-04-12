@@ -5,42 +5,9 @@
 
 #include <iostream>
 #include <sstream>
+#include <cmath>
 
 using namespace std;
-
-// void exportPerStationCountComparison(string fileName, map<string, vector<int> > &mapPerStationCount1, map<string, vector<int> > &mapPerStationCount2, string strTitle) {
-//     float fSumInaccuracy = 0.0f;
-//     float fAccuracy = 0.0f;
-//     float fInaccuracy = 0.0f;
-//     ofstream outfile;
-
-//     outfile.open(fileName);
-//     outfile << strTitle << endl;
-
-//     for (map<string, vector<int> >::iterator it = mapPerStationCount1.begin(); it != mapPerStationCount1.end(); it++) {
-//         string strStationName = it->first;
-//         vector<int> vecOpal = it->second;
-
-//         map<string, vector<int> >::iterator itRoam = mapPerStationCount2.find(strStationName);
-//         if (itRoam != mapPerStationCount2.end()) {
-//             vector<int> vecRoam = itRoam->second;
-//             fAccuracy = float(vecRoam.size())/float(vecOpal.size());
-//             fInaccuracy = 1 - fAccuracy;
-//             outfile << strStationName << ", " << vecOpal.size() << ", " << itRoam->first << ", " << vecRoam.size() << ", " << fAccuracy << ", " << fInaccuracy << endl;
-//         }
-//         else {
-//             fAccuracy = 0;
-//             fInaccuracy = 1;
-//             outfile << strStationName << ", " << vecOpal.size() << ", " << strStationName << ", " << 0 << ", " << 0 << ", " << 1 << endl;
-//         }
-
-//         fSumInaccuracy += fInaccuracy;
-//     }
-
-//     outfile << ",,,,," << fSumInaccuracy/mapPerStationCount1.size() << endl;
-
-//     outfile.close();
-// }
 
 void exportCountComparison(string fileName, map<string, vector<int> > &map1, map<string, vector<int> > &map2, string strTitle) {
     float fSumInaccuracy = 0.0f;
@@ -98,60 +65,101 @@ void mergePerDayMap(map<string, vector<int> > &mapTo, map<string, vector<int> > 
     }
 }
 
-// void TransportApplication::compareOpalAndRoamPerStationPerDay(vector<string> strOpalInputCSVNames, vector<string> strRoamInputCSVNames, 
-// 	vector<string> strOnOutputCSVNames, vector<string> strOffOutputCSVNames, 
-// 	std::string strMergedOnOutputCSVName, std::string strMergedOffOutputCSVName) {
-// 	int nOpalCSVCount = strOpalInputCSVNames.size();
-// 	int nRoamCSVCount = strRoamInputCSVNames.size();
-// 	int nOnOutputCSVCount = strOnOutputCSVNames.size();
-// 	int nOffOutputCSVCount = strOffOutputCSVNames.size();
+map<string, unsigned int> sumUpVecCountToUIntCount(map<string, vector<int> > mapVecCount) {
+    map<string, unsigned int> mapResult;
+    for (map<string, vector<int> >::iterator it = mapVecCount.begin(); it != mapVecCount.end(); it++) {
+        string strKey = it->first;
+        vector<int> vecCounts = it->second;
+        unsigned int count = 0;
+        for (int i = 0; i < vecCounts.size(); i++) {
+            count += vecCounts[i];
+        }
+        mapResult.insert(pair<string, unsigned int>(strKey, count));
+    }
+    return mapResult;
+}
 
-// 	if (nOpalCSVCount != nRoamCSVCount || nOpalCSVCount != nOnOutputCSVCount || nOpalCSVCount != nOffOutputCSVCount) {
-// 		cout << "The csv name arrays given are not consistent: " << endl;
-// 		cout << "nOpalCSVCount: " << nOpalCSVCount << " nRoamCSVCount: " << nRoamCSVCount << " nOnOutputCSVCount: " << nOnOutputCSVCount << " nOffOutputCSVCount: " << nOffOutputCSVCount << endl;
-// 		return;
-// 	}
+map<string, unsigned int> sumUpVecRowToUIntCount(map<string, vector<int> > mapVecRows) {
+    map<string, unsigned int> mapResult;
+    for (map<string, vector<int> >::iterator it = mapVecRows.begin(); it != mapVecRows.end(); it++) {
+        string strKey = it->first;
+        vector<int> vecRows = it->second;
+        mapResult.insert(pair<string, unsigned int>(strKey, vecRows.size()));
+    }
+    return mapResult;
+}
 
-// 	int nDays = nOpalCSVCount;
-// 	map<string, vector<int> > mapTotalOnOpalPerStationCount;
-// 	map<string, vector<int> > mapTotalOffOpalPerStationCount;
-// 	map<string, vector<int> > mapTotalOnRoamPerStationCount;
-// 	map<string, vector<int> > mapTotalOffRoamPerStationCount;
-	
-// 	for (int i = 0; i < nDays; i++) {
-//         string opalFile = strOpalInputCSVNames[i];
-//         string roamFile = strRoamInputCSVNames[i];
-//         string strDate = i < 9 ? "0" + to_string(i + 1) : to_string(i + 1);
+void exportCountComparisonWithGEH(string fileName, map<string, unsigned int> &map1, map<string, unsigned int> &map2, string strTitle) {
+    float fGEH = 0.0f;
+    float fTotalGEH = 0.0f;
+    float fSumGEH = 0.0f;
+    float fAverageGEH = 0.0f;
 
-//         OpalTripAnalyser opal;
-//         opal.setFile(opalFile);
-//         opal.calculatePerStationCount();
-//         map<string, vector<int> > mapOnOpalPerStationCount = opal.getOnPerStationCount();
-//         map<string, vector<int> > mapOffOpalPerStationCount = opal.getOffPerStationCount();
+    float fSumInaccuracy = 0.0f;
+    float fAverageInaccuracy = 0.0f;
+    float fTotalInaccuracy = 0.0f;
+    float fAccuracy = 0.0f;
+    float fInaccuracy = 0.0f;
 
-//         RoamResultAnalyser roam;
-//         roam.setFile(roamFile);
-//         roam.calculatePerStationCount();
-//         map<string, vector<int> > mapOnRoamPerStationCount = roam.getOnPerStationCount();
-//         map<string, vector<int> > mapOffRoamPerStationCount = roam.getOffPerStationCount();
+    unsigned int nTotalCount1 = 0;
+    unsigned int nTotalCount2 = 0;
+    float fAverageCount1 = 0.0f;
+    float fAverageCount2 = 0.0f;
 
-// 		exportPerStationCountComparison(strOnOutputCSVNames[i], mapOnOpalPerStationCount, mapOnRoamPerStationCount, "Opal,Count,Roam,Count");
-// 		exportPerStationCountComparison(strOffOutputCSVNames[i], mapOffOpalPerStationCount, mapOffRoamPerStationCount, "Opal,Count,Roam,Count");
+    ofstream outfile;
 
-//         if (strOnOutputCSVNames != 0 && strOnOutputCSVNames.size() != 0) {
-//             // Merge per day station count into one file
-//     		mergePerDayMap(mapTotalOnOpalPerStationCount, mapOnOpalPerStationCount);
-//     		mergePerDayMap(mapTotalOffOpalPerStationCount, mapOffOpalPerStationCount);
-//     		mergePerDayMap(mapTotalOnRoamPerStationCount, mapOnRoamPerStationCount);
-//     		mergePerDayMap(mapTotalOffRoamPerStationCount, mapOffRoamPerStationCount);
-//         }
-//     }
+    outfile.open(fileName);
+    outfile << strTitle << endl;
 
-//     if (strOnOutputCSVNames != 0 && strOnOutputCSVNames.size() != 0) {
-// 	   exportPerStationCountComparison(strMergedOnOutputCSVName, mapTotalOnOpalPerStationCount, mapTotalOnRoamPerStationCount, "Opal,Count,Roam,Count");
-// 	   exportPerStationCountComparison(strMergedOffOutputCSVName, mapTotalOffOpalPerStationCount, mapTotalOffRoamPerStationCount, "Opal,Count,Roam,Count");
-//     }
-// }
+    for (map<string, unsigned int>::iterator it = map1.begin(); it != map1.end(); it++) {
+        string strKey = it->first;
+        unsigned int count1 = it->second;
+        nTotalCount1 += count1;
+
+        map<string, unsigned int>::iterator it2 = map2.find(strKey);
+        if (it2 != map2.end()) {
+            unsigned int count2 = it2->second;
+            nTotalCount2 += count2;
+            fGEH = sqrt(2.0f * float((count2 - count1) * (count2 - count1)) / float(count2 + count1));
+
+            if (count1 > 0) {
+                fAccuracy = float(count2)/float(count1);
+                fInaccuracy = 1 - fAccuracy;
+            }
+            else {
+                fAccuracy = 0;
+                fInaccuracy = 1;
+            }
+
+            outfile << strKey << ", " << count1 << ", " << count2 << ", " << fGEH << "," << fInaccuracy << endl;
+        }
+        else {
+            fGEH = sqrt(2.0f * float(count1));
+
+            fAccuracy = 0;
+            fInaccuracy = 1;
+
+            outfile << strKey << ", " << count1 << ", " << 0 << ", " << fGEH << "," << fInaccuracy << endl;
+        }
+
+        fSumInaccuracy += fInaccuracy;
+        fSumGEH += fGEH;
+    }
+
+    fTotalGEH = sqrt(2.0f * float((nTotalCount2 - nTotalCount1) * (nTotalCount2 - nTotalCount1)) / float(nTotalCount2 + nTotalCount1));
+    fAverageGEH = fSumGEH/map1.size();
+
+    fTotalInaccuracy = float(nTotalCount2)/float(nTotalCount1);
+    fAverageInaccuracy = fSumInaccuracy/map1.size();
+
+    fAverageCount1 = float(nTotalCount1)/map1.size();
+    fAverageCount2 = float(nTotalCount2)/map2.size();
+
+    outfile << "Total" << "," << nTotalCount1 << "," << nTotalCount2 << "," << fTotalGEH << "," << fTotalInaccuracy << endl;
+    outfile << "Average" << "," << fAverageCount1 << "," << fAverageCount2 << "," << fAverageGEH << "," << fAverageInaccuracy << endl;
+
+    outfile.close();
+}
 
 void TransportApplication::compareOpalAndRoamPerStationPerDay(vector<string> strOpalInputCSVNames, vector<string> strRoamInputCSVNames, 
     string strOnOutputCSVName, string strOffOutputCSVName) {
@@ -167,17 +175,17 @@ void TransportApplication::compareOpalAndRoamPerStationPerDay(vector<string> str
     OpalTripAnalyser opal;
     opal.setFiles(strOpalInputCSVNames);
     opal.calculatePerStationCount();
-    map<string, vector<int> > mapOnOpalPerStationCount = opal.getOnPerStationCount();
-    map<string, vector<int> > mapOffOpalPerStationCount = opal.getOffPerStationCount();
+    map<string, unsigned int> mapOnOpalPerStationCount = sumUpVecRowToUIntCount(opal.getOnPerStationCount());
+    map<string, unsigned int> mapOffOpalPerStationCount = sumUpVecRowToUIntCount(opal.getOffPerStationCount());
 
     RoamResultAnalyser roam;
     roam.setFiles(strRoamInputCSVNames);
     roam.calculatePerStationCount();
-    map<string, vector<int> > mapOnRoamPerStationCount = roam.getOnPerStationCount();
-    map<string, vector<int> > mapOffRoamPerStationCount = roam.getOffPerStationCount();
+    map<string, unsigned int> mapOnRoamPerStationCount = sumUpVecRowToUIntCount(roam.getOnPerStationCount());
+    map<string, unsigned int> mapOffRoamPerStationCount = sumUpVecRowToUIntCount(roam.getOffPerStationCount());
 
-    exportCountComparison(strOnOutputCSVName, mapOnOpalPerStationCount, mapOnRoamPerStationCount, "Opal,Count,Roam,Count");
-    exportCountComparison(strOffOutputCSVName, mapOffOpalPerStationCount, mapOffRoamPerStationCount, "Opal,Count,Roam,Count");
+    exportCountComparisonWithGEH(strOnOutputCSVName, mapOnOpalPerStationCount, mapOnRoamPerStationCount, "Station,Opal,Roam per person,GEH");
+    exportCountComparisonWithGEH(strOffOutputCSVName, mapOffOpalPerStationCount, mapOffRoamPerStationCount, "Station,Opal,Roam per person,GEH");
 }
 
 void TransportApplication::compareOpalAndRoamPerODPerDay(std::vector<std::string> strOpalInputCSVNames, std::vector<std::string> strRoamInputCSVNames, 
@@ -481,31 +489,6 @@ void TransportApplication::generateAllLines(string strPuncFileName, string strOu
     exportLines(strOutputCSVName, mapLines, "Service Line,Service Type,Stops");
 }
 
-map<string, unsigned int> sumUpVecCountToUIntCount(map<string, vector<int> > mapVecCount) {
-    map<string, unsigned int> mapResult;
-    for (map<string, vector<int> >::iterator it = mapVecCount.begin(); it != mapVecCount.end(); it++) {
-        string strKey = it->first;
-        vector<int> vecCounts = it->second;
-        unsigned int count = 0;
-        for (int i = 0; i < vecCounts.size(); i++) {
-            count += vecCounts[i];
-        }
-        mapResult.insert(pair<string, unsigned int>(strKey, count));
-    }
-    return mapResult;
-}
-
-map<string, unsigned int> sumUpVecRowToUIntCount(map<string, vector<int> > mapVecRows) {
-    map<string, unsigned int> mapResult;
-    for (map<string, vector<int> >::iterator it = mapVecRows.begin(); it != mapVecRows.end(); it++) {
-        string strKey = it->first;
-        vector<int> vecRows = it->second;
-        mapResult.insert(pair<string, unsigned int>(strKey, vecRows.size()));
-    }
-    return mapResult;
-}
-
-
 void exportCountComparison(string fileName, map<string, unsigned int> &map1, map<string, unsigned int> &map2, string strTitle) {
     float fSumInaccuracy = 0.0f;
     float fAccuracy = 0.0f;
@@ -568,15 +551,16 @@ void TransportApplication::comparerRoamPPAndRoamPSPerStationPerDay(std::vector<s
 
 /* Actually opal and cvm are not comparable to each other since cvm per stop data contains transfer the deducted stations, while opal is just raw tap on/off without transfer.
  * Haven't tried to really run this, will wait for discussion.
+ * As discussed, compare cvm with roam per stop.
  */
-void TransportApplication::compareOpalAndCvmPerStationPerDay(vector<string> strOpalInputCSVNames, vector<string> strCvmInputCSVNames, 
+void TransportApplication::compareRoamAndCvmPerStationFromPerStopData(vector<string> strRoamInputCSVNames, vector<string> strCvmInputCSVNames, 
     string strOnOutputCSVName, string strOffOutputCSVName) {
 
-    OpalTripAnalyser opal;
-    opal.setFiles(strOpalInputCSVNames);
-    opal.calculatePerStationCount();
-    map<string, unsigned int> mapOnOpalCount = sumUpVecRowToUIntCount(roam.getOnPerStationCount());
-    map<string, unsigned int> mapOffOpalCount = sumUpVecRowToUIntCount(roam.getOffPerStationCount());
+    RoamPerStopResultAnalyser roamPerStop;
+    roamPerStop.setFiles(strRoamInputCSVNames);
+    roamPerStop.calculatePerStationCount();
+    map<string, unsigned int> mapOnRoamPerStopCount = sumUpVecCountToUIntCount(roamPerStop.getOnPerStationCount());
+    map<string, unsigned int> mapOffRoamPerStopCount = sumUpVecCountToUIntCount(roamPerStop.getOffPerStationCount());
 
     CvmPerStopResultAnalyser cvmPerStop;
     cvmPerStop.setFiles(strCvmInputCSVNames);
@@ -584,6 +568,6 @@ void TransportApplication::compareOpalAndCvmPerStationPerDay(vector<string> strO
     map<string, unsigned int> mapOnCvmPerStopCount = sumUpVecCountToUIntCount(cvmPerStop.getOnPerStationCount());
     map<string, unsigned int> mapOffCvmPerStopCount = sumUpVecCountToUIntCount(cvmPerStop.getOffPerStationCount());
 
-    exportCountComparison(strOnOutputCSVName, mapOnOpalPerStationCount, mapOnCvmPerStopCount, "Opal,Count,Cvm,Count");
-    exportCountComparison(strOffOutputCSVName, mapOffOpalPerStationCount, mapOffCvmPerStopCount, "Opal,Count,Cvm,Count");
+    exportCountComparisonWithGEH(strOnOutputCSVName, mapOnRoamPerStopCount, mapOnCvmPerStopCount, "Station,Roam per stop,Cvm per stop,GEH,Inaccuracy");
+    exportCountComparisonWithGEH(strOffOutputCSVName, mapOffRoamPerStopCount, mapOffCvmPerStopCount, "Station,Roam per stop,Cvm per stop,GEH,Inaccuracy");
 }

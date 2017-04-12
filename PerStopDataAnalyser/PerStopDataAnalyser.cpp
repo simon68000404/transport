@@ -48,6 +48,8 @@ void RoamPerStopResultAnalyser::calculatePerStationCount() {
             return;
         }
 
+        cout << "Analysing " << m_strInfileNames[i] << endl;
+
         string value;
         string line;
 
@@ -139,6 +141,8 @@ void CvmPerStopResultAnalyser::calculatePerStationCount() {
             cout << "File " << m_strInfileNames[i] << " couldn't be opened." << endl;
             return;
         }
+
+        cout << "Analysing " << m_strInfileNames[i] << endl;
 
         string value;
         string line;
