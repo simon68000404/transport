@@ -28,6 +28,9 @@ public:
 
     void setFiles(std::vector<std::string> strFileNames);
 
+    void extractTripNames();
+    std::vector<std::string> getTripNames();
+
     bool isActDprtLaterThanArrv(std::string fileName);
     bool doesActStationMatchPlanned();
     bool correctUnknownActStation();
@@ -38,11 +41,15 @@ public:
     std::vector<std::pair<int, std::string> > getExceptionDprtLTArrv();
 
     void calculateExceptions();
+
+    unsigned int getTotalRowCount();
     
 private:
     void updateExceptionUnknownStations(int nRow, std::string strThatRow);
     void updateExceptionMissing(int nRow, std::string strThatRow);
     void updateExceptionDprtLTArrv(int nRow, std::string strThatRow);
+
+    void updateTripNames(std::string strTripName);
 
     int compareTimeStringLT(std::string t1, std::string t2);
     int m_iPlannedDprtTimeCol;
@@ -56,6 +63,7 @@ private:
     int m_iPlannedStopStationCol;
     int m_iActStopStationCol;
 
+    int m_iServiceDateCol;
     int m_iTripNameCol;
     int m_iDestStationCol;
     int m_iServiceTypeCol;
@@ -66,6 +74,10 @@ private:
     std::vector<std::pair<int, std::string> > m_vecExceptionUnknownStation;
     std::vector<std::pair<int, std::string> > m_vecExceptionMissing;
     std::vector<std::pair<int, std::string> > m_vecExceptionDprtLTArrv;
+
+    std::set<std::string> m_setTripNames;
+
+    unsigned int m_nTotalRows;
 };
 
 #endif

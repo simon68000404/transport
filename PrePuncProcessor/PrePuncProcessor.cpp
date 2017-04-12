@@ -32,6 +32,7 @@ using namespace std;
 // }
 
 PrePuncProcessor::PrePuncProcessor() {
+    m_iServiceDateCol = 1;
     m_iTripNameCol = 3;
     m_iDestStationCol = 8;
     m_iServiceTypeCol = 4;
@@ -48,10 +49,93 @@ PrePuncProcessor::PrePuncProcessor() {
 
     m_iActDprtTimeCol = 20;
     m_iActArrvTimeCol = 21;
+
+    m_nTotalRows = 0;
 }
 
 void PrePuncProcessor::setFiles(vector<string> strFileNames) {
     this->m_strInfileNames = strFileNames;
+}
+
+void PrePuncProcessor::updateTripNames(std::string strTripName) {
+    m_setTripNames.insert(strTripName);
+}
+
+void PrePuncProcessor::extractTripNames() {
+    ifstream infile;
+    for (int i = 0; i < m_strInfileNames.size(); i++) {
+        infile.open(m_strInfileNames[i].c_str());
+        if (!infile.is_open()) {
+            cout << "File " << m_strInfileNames[i] << " couldn't be opened." << endl;
+            return;
+        }
+
+        string value;
+        string line;
+
+        int r = 1; // Avoid first row 
+        struct tm tm = {};
+        getline(infile, line);
+        while (getline(infile, line)) {
+            int c = 0;
+            stringstream ss(line);
+
+            string strServiceDate;
+            string strTripName;
+
+            string strDay;
+            string strMonth;
+            string strYear;
+
+            while(c < m_iServiceDateCol) {
+                getline(ss, value, ',');
+                // cout << c << " " << value << endl;
+                c++;
+            }
+            getline(ss, value, ',');
+            // cout << c << " " << value << endl;
+            strServiceDate = value.substr(1, strServiceDate.length() - 2);
+            stringstream ssServiceDate(strServiceDate);
+            getline(ssServiceDate, strDay, '/');
+            getline(ssServiceDate, strMonth, '/');
+            getline(ssServiceDate, strYear);
+            strServiceDate = strYear + '-' + strMonth + '-' + strDay;
+
+            cout << strServiceDate << endl;
+            // strServiceDate = // 01/08/2016 to 2016-08-01
+            c++;
+
+            while(c < m_iTripNameCol) {
+                getline(ss, value, ',');
+                // cout << c << " " << value << endl;
+                c++;
+            }
+            getline(ss, value, ',');
+            // cout << c << " " << value << endl;
+            strTripName = value.substr(1, strTripName.length() - 2);
+            c++;
+            
+            while (getline(ss, value, ',')) {
+                // cout << r << " " << c << " " << value << endl;
+                c++;
+            }
+
+            updateTripNames(strServiceDate + "_" + strTripName);
+
+            r++;
+        }
+
+        infile.close();
+    }
+}
+
+std::vector<std::string> PrePuncProcessor::getTripNames() {
+    vector<string> vecAllTripNames;
+    for (set<string>::iterator it = m_setTripNames.begin(); it != m_setTripNames.end(); it++) {
+        vecAllTripNames.push_back(*it);
+    }    
+
+    return vecAllTripNames;
 }
 
 void PrePuncProcessor::calculateExceptions() {
@@ -126,7 +210,13 @@ void PrePuncProcessor::calculateExceptions() {
         }
 
         infile.close();
+
+        m_nTotalRows += (r - 1);
     }
+}
+
+unsigned int PrePuncProcessor::getTotalRowCount() {
+    return m_nTotalRows;
 }
 
 vector<pair<int, string> > PrePuncProcessor::getExceptionUnknownStations() {
@@ -166,166 +256,3 @@ int PrePuncProcessor::compareTimeStringLT(string strT1, string strT2) {
 
     return difftime(t1,t2) >= 0.0 ? 1 : -1; 
 }
-
-// bool PrePuncProcessor::isActDprtLaterThanArrv(string fileName) {
-
-
-
-//     if (fileName.length() == 0) {
-//         cout << "File name is empty.";
-//         return false;
-//     }
-
-//     ifstream infile;
-//     infile.open(fileName.c_str());
-//     if (!infile.is_open()) {
-//         cout << "File " << fileName << " couldn't be opened.";
-//         return false;
-//     }
-
-//     string value;
-//     string line;
-
-//     int r = 0;
-//     struct tm tm = {};
-//     while (getline(infile, line)) {
-//         int c = 0;
-//         stringstream ss(line);
-//         string plannedStopNode = "";
-//         string actStopNode = "";
-//         string destStation = "";
-//         string plannedStopStation = "";
-//         string actStopStation = "";
-//         string actDprtTime = "";
-//         string actArrvTime = "";
-        
-//         while (getline(ss, value, ',')) {
-//             if (c == m_plannedStopNodeCol) {
-//                 plannedStopNode = value;
-//             }
-//             else if (c == m_actStopNodeCol) {
-//                 actStopNode = value;
-//             }
-//             else if (c == m_plannedStopStationCol) {
-//                 plannedStopStation = value;
-//             }
-//             else if (c == m_actStopStationCol) {
-//                 actStopStation = value;
-//             }
-//             else if (c == m_destStationCol) {
-//                 destStation = value;
-//             }
-//             else if (c == m_actDprtTimeCol) {
-//                 actDprtTime = value.substr(1, value.length() - 2);
-//             }
-//             else if (c == m_actArrvTimeCol) {
-//                 actArrvTime = value.substr(1, value.length() - 2);
-//             }
-//             // cout << r << " " << c << " " << value << endl;
-//             c++;
-//         }
-
-//         if (this->compareTimeStringLT(actDprtTime, actArrvTime) == -1) {
-//             cout << r << " " << actDprtTime << " " << actArrvTime << endl;
-//         }
-
-//         r++;
-//     }
-
-
-//     // struct tm tm = {};
-//     // if (strptime("23/08/2016 08:22:00", "%d/%m/%Y %H:%M:%S", &tm) == 0) {
-//     //     cout << "Time format not correct." << endl;
-//     // }
-
-//     // // time_t t1 = mktime(&tm1);
-//     // // time_t t2 = mktime(&tm2);
-
-//     // printf("year: %d; month: %d; day: %d;\n",
-//     //         tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
-//     // printf("hour: %d; minute: %d; second: %d\n",
-//     //         tm.tm_hour, tm.tm_min, tm.tm_sec);
-//     // printf("week day: %d; year day: %d\n", tm.tm_wday, tm.tm_yday);
-// }
-
-// bool PrePuncProcessor::interpolateMissingData(string fileName) {
-//     if (fileName.length() == 0) {
-//         cout << "File name is empty.";
-//         return false;
-//     }
-
-//     ifstream infile;
-//     infile.open(fileName.c_str());
-//     if (!infile.is_open()) {
-//         cout << "File " << fileName << " couldn't be opened.";
-//         return false;
-//     }
-
-//     string value;
-//     string line;
-    
-//     int r = 0;
-//     while (getline(infile, line)) {
-//         int c = 0;
-//         stringstream ss(line);
-//         string plannedStopNode = "";
-//         string actStopNode = "";
-//         string destStation = "";
-//         string plannedStopStation = "";
-//         string actStopStation = "";
-        
-//         while (getline(ss, value, ',')) {
-//             // switch (c) {
-//             //     case m_plannedStopNodeCol:
-//             //         plannedStopNode = value;
-//             //         break;
-//             //     case m_actStopNodeCol:
-//             //         actStopNode = value;
-//             //         break;
-//             //     case m_plannedStopStationCol:
-//             //         plannedStopStation = value;
-//             //         break;
-//             //     case m_actStopStationCol:
-//             //         actStopStation = value;
-//             //         break;                    
-//             //     case m_destStationCol:
-//             //         destStation = value;
-//             //         break;
-//             //     default:
-//             // }
-//             if (c == m_plannedStopNodeCol) {
-//                 plannedStopNode = value;
-//             }
-//             else if (c == m_actStopNodeCol) {
-//                 actStopNode = value;
-//             }
-//             else if (c == m_plannedStopStationCol) {
-//                 plannedStopStation = value;
-//             }
-//             else if (c == m_actStopStationCol) {
-//                 actStopStation = value;
-//             }
-//             else if (c == m_destStationCol) {
-//                 destStation = value;
-//             }
-//             // cout << r << " " << c << " " << value << endl;
-//             c++;
-//         }
-
-//         // planned and act match check
-//         // if (actStopStation.compare(plannedStopStation) != 0 && actStopStation.compare("\"Missing\"") != 0) {
-//         //     cout << plannedStopNode << " " << actStopNode << " " << plannedStopStation << " " << actStopStation << endl;
-//         //     // cout << line << endl;
-//         // }
-
-//         // 
-
-
-//         r++;
-//         // if (r++ > 3) {
-//         //     break;
-//         // }
-//     }
-    
-//     return true;
-// }

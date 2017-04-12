@@ -98,6 +98,8 @@ void OpalTripAnalyser::calculatePerStationCount() {
             }
 
             if (tripType == "Train") {
+                m_nTotalRows++;
+
                 if ("UNKNOWN" != onStopName) {
                     if ("UNKNOWN" != offStopName) {
                         if (onStopName.compare(offStopName) != 0) {
@@ -114,8 +116,6 @@ void OpalTripAnalyser::calculatePerStationCount() {
 
             r++;
         }
-
-        m_nTotalRows += r;
 
     	infile.close();
     }   
@@ -184,6 +184,7 @@ void OpalTripAnalyser::calculatePerODCount() {
             }
 
             if (tripType == "Train") {
+                m_nTotalRows++;
                 if ("UNKNOWN" != onStopName) {
                     if ("UNKNOWN" != offStopName) {
                         if (onStopName.compare(offStopName) != 0) {
@@ -198,8 +199,6 @@ void OpalTripAnalyser::calculatePerODCount() {
 
             r++;
         }
-
-        m_nTotalRows += r;
 
         infile.close();
     }   
@@ -268,6 +267,8 @@ void OpalTripAnalyser::calculateExceptions() {
             }
 
             if (tripType == "Train") {
+                m_nTotalRows++;
+
                 if ("UNKNOWN" == onStopName) {
                     updateUnknownOnCount(r);
                 }
@@ -283,8 +284,6 @@ void OpalTripAnalyser::calculateExceptions() {
 
             r++;
         }
-
-        m_nTotalRows += r;
 
         infile.close();
     }
@@ -562,7 +561,7 @@ void RoamResultAnalyser::calculatePerStationCount() {
             r++;
         }
 
-        m_nTotalRows += r;
+        m_nTotalRows += r - 1;
 
         infile.close();
     }
@@ -662,7 +661,7 @@ void RoamResultAnalyser::calculatePerStationCountWithTransfers() {
             r++;
         }
 
-        m_nTotalRows += r;
+        m_nTotalRows += r - 1;
 
         infile.close();
     }
@@ -745,7 +744,7 @@ void RoamResultAnalyser::calculatePerODCount() {
             r++;
         }
 
-        m_nTotalRows += r;
+        m_nTotalRows += r - 1;
 
         infile.close();
     }
@@ -828,7 +827,7 @@ void RoamResultAnalyser::calculatePerLineCount() {
             r++;
         }
 
-        m_nTotalRows += r;
+        m_nTotalRows += r - 1;
 
         infile.close();
     }
@@ -912,7 +911,7 @@ void OpalTripAnalyser::calculatePerLineCount() {
             r++;
         }
 
-        m_nTotalRows += r;
+        m_nTotalRows += r - 1;
 
         infile.close();
     }
@@ -969,7 +968,7 @@ void RoamResultAnalyser::calculateExceptions() {
             r++;
         }
 
-        m_nTotalRows += r;
+        m_nTotalRows += r - 1;
 
         infile.close();
     }

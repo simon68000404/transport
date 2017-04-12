@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include <cmath>
+#include <set>
 
 using namespace std;
 
@@ -84,6 +85,16 @@ map<string, unsigned int> sumUpVecRowToUIntCount(map<string, vector<int> > mapVe
     for (map<string, vector<int> >::iterator it = mapVecRows.begin(); it != mapVecRows.end(); it++) {
         string strKey = it->first;
         vector<int> vecRows = it->second;
+        mapResult.insert(pair<string, unsigned int>(strKey, vecRows.size()));
+    }
+    return mapResult;
+}
+
+map<string, unsigned int> sumUpVecRowToUIntCount(map<string, vector<unsigned int> > mapVecRows) {
+    map<string, unsigned int> mapResult;
+    for (map<string, vector<unsigned int> >::iterator it = mapVecRows.begin(); it != mapVecRows.end(); it++) {
+        string strKey = it->first;
+        vector<unsigned int> vecRows = it->second;
         mapResult.insert(pair<string, unsigned int>(strKey, vecRows.size()));
     }
     return mapResult;
@@ -300,9 +311,6 @@ void TransportApplication::compareOpalAndRoamPerLinePerDay(std::vector<std::stri
 
 
 void exportPerPersonExceptions(string strOutputCSVBaseName, string strOutputCSVNameModifier, vector<int> vecCount, int totalRows, string strTitle) {
-    // float fSumInaccuracy = 0.0f;
-    // float fAccuracy = 0.0f;
-    // float fInaccuracy = 0.0f;
     ofstream outfile;
 
     outfile.open(strOutputCSVBaseName + strOutputCSVNameModifier);
@@ -320,9 +328,6 @@ void exportPerPersonExceptions(string strOutputCSVBaseName, string strOutputCSVN
             outfile << "," << vecCount[i] + 1 << endl;
         }
     }
-
-
-    // outfile << ",,,,," << fSumInaccuracy/map1.size() << endl;
 
     outfile.close();
 }
@@ -348,10 +353,21 @@ void TransportApplication::generateRoamExceptions(std::vector<std::string> strRo
     exportPerPersonExceptions(strOutputCSVBaseName, "more_than_2_trips_stats.csv", roam.getMT2TripsCount(), roam.getTotalRowCount(), "Roam more than 2 trips stats");
 }
 
-void exportPuncExceptions(string strOutputCSVBaseName, string strOutputCSVNameModifier, vector<pair<int, string> > vec, string strTitle) {
+void exportPuncExceptions(string strOutputCSVBaseName, string strOutputCSVNameModifier, vector<pair<int, string> > vec, string strTitle, unsigned int nTotalRows) {
+    cout << vec.size() << " " << nTotalRows << endl;
     ofstream outfile;
 
     outfile.open(strOutputCSVBaseName + strOutputCSVNameModifier);
+    if (!outfile) {
+      cerr << "Can't write to output file " << strOutputCSVBaseName + strOutputCSVNameModifier << endl;
+      exit(1);
+    }
+    
+    outfile << "Exception Count," << vec.size() << endl;
+    outfile << "All Rows Count," << nTotalRows << endl;
+    outfile << "Exception Rate," << float(vec.size()) / float(nTotalRows) << endl;
+    outfile << "," << endl;
+
     outfile << strTitle << endl;
     outfile << "Row number";
     outfile << ",Business Centre,Service Date,Segment Direction,Trip Name,Service Type,Service Line,Trip Zone,Orig. Station,Dest. Station,Trip Dprt Status,Trip Arrv Status,Leading Set Number,Leading Set Type,Node Seq Order,Planned Stop Node,Planned Stop Station,Planned Station Dprt Time,Planned Station Arrv Time,Actual Stop Node,Actual Stop Station,Actual Station Dprt Time,Actual Station Arrv Time,Station Arrv Status,Station Dprt Status";
@@ -369,9 +385,9 @@ void TransportApplication::generatePuncExceptions(std::vector<std::string> strPu
     ppp.setFiles(strPuncInputCSVNames);
     ppp.calculateExceptions();
 
-    exportPuncExceptions(strOutputCSVBaseName, "unknown_station_list.csv", ppp.getExceptionUnknownStations(), "Punctuality Unknown station List");
-    exportPuncExceptions(strOutputCSVBaseName, "missing_actual_stop_list.csv", ppp.getExceptionMissing(), "Punctuality Missing Actual Stop List");
-    exportPuncExceptions(strOutputCSVBaseName, "dprt_later_than_arrv_list.csv", ppp.getExceptionDprtLTArrv(), "Punctuality Departure Time Later Than Arrival Time List");
+    exportPuncExceptions(strOutputCSVBaseName, "unknown_station_list.csv", ppp.getExceptionUnknownStations(), "Punctuality Unknown station List", ppp.getTotalRowCount());
+    exportPuncExceptions(strOutputCSVBaseName, "missing_actual_stop_list.csv", ppp.getExceptionMissing(), "Punctuality Missing Actual Stop List", ppp.getTotalRowCount());
+    exportPuncExceptions(strOutputCSVBaseName, "dprt_later_than_arrv_list.csv", ppp.getExceptionDprtLTArrv(), "Punctuality Departure Time Later Than Arrival Time List", ppp.getTotalRowCount());
 }
 
 void exportLines(string strFileName, map<string, Line> mapLines, string strTitle) {
@@ -572,4 +588,79 @@ void TransportApplication::compareRoamAndCvmPerStationFromPerStopData(vector<str
 
     exportCountComparisonWithGEH(strOnOutputCSVName, mapOnRoamPerStopCount, mapOnCvmPerStopCount, "Station,Roam per stop,Cvm per stop,GEH,Inaccuracy");
     exportCountComparisonWithGEH(strOffOutputCSVName, mapOffRoamPerStopCount, mapOffCvmPerStopCount, "Station,Roam per stop,Cvm per stop,GEH,Inaccuracy");
+}
+
+void exportCompleteness(vector<string> vecAllTripNames, map<string, unsigned int> map1, map<string, unsigned int> map2, string strOutputCSVName, string strTitle) {
+    unsigned int nMap1CoverageCount = 0;
+    unsigned int nMap2CoverageCount = 0;
+
+    ofstream outfile;
+
+    outfile.open(strOutputCSVName);
+    outfile << strTitle << endl;
+
+    for (int i = 0; i < vecAllTripNames.size(); i++) {
+        outfile << vecAllTripNames[i];
+
+        map<string, unsigned int>::iterator it1;
+        map<string, unsigned int>::iterator it2;
+        it1 = map1.find(vecAllTripNames[i]);
+        it2 = map2.find(vecAllTripNames[i]);
+
+        if (it1 != map1.end()) {
+            outfile << "," << it1->second;
+            nMap1CoverageCount++;
+        }
+        else {
+            outfile << ",0";
+        }
+
+        if (it2 != map2.end()) {
+            outfile << "," << it2->second;
+            nMap2CoverageCount++;
+        }
+        else {
+            outfile << ",0";
+        }
+
+        outfile << endl;
+    }
+
+    outfile << "Total," << vecAllTripNames.size() << "," << nMap1CoverageCount << "," << nMap2CoverageCount << endl;
+    outfile << "Completeness Rate,," << float(nMap1CoverageCount)/float(vecAllTripNames.size()) << float(nMap2CoverageCount)/float(vecAllTripNames.size()) << endl;
+
+    outfile.close();
+}
+
+void TransportApplication::checkCompleteness(std::vector<std::string> strPuncInputCSVNames, std::map<std::string, std::vector<std::string> > mapPerStopInputCSVNames, std::string strOutputCSVName) {
+    PrePuncProcessor punc;
+    punc.setFiles(strPuncInputCSVNames);
+    punc.extractTripNames();
+    vector<string> vecAllTripNames = punc.getTripNames();
+
+    map<string, vector<string> >::iterator it;
+    vector<string> vecRoamInputFiles;
+    vector<string> vecCvmInputFiles;
+    
+    it = mapPerStopInputCSVNames.find("Roam");
+    if (it != mapPerStopInputCSVNames.end()) {
+        vecRoamInputFiles = it->second;
+    }
+
+    it = mapPerStopInputCSVNames.find("Cvm");
+    if (it != mapPerStopInputCSVNames.end()) {
+        vecCvmInputFiles = it->second;
+    }
+
+    RoamPerStopResultAnalyser roam;
+    roam.setFiles(vecRoamInputFiles);
+    roam.extractTripNameRows();
+    map<string, unsigned int> mapRoamTripNames = sumUpVecRowToUIntCount(roam.getTripNameRows());
+
+    CvmPerStopResultAnalyser cvm;
+    cvm.setFiles(vecCvmInputFiles);
+    cvm.extractTripNameRows();
+    map<string, unsigned int> mapcvmTripNames = sumUpVecRowToUIntCount(cvm.getTripNameRows());
+
+    exportCompleteness(vecAllTripNames, mapRoamTripNames, mapRoamTripNames, strOutputCSVName, "Trips from Punctuality,Roam,Cvm");
 }
