@@ -155,6 +155,8 @@ void exportCountComparisonWithGEH(string fileName, map<string, unsigned int> &ma
     fAverageCount1 = float(nTotalCount1)/map1.size();
     fAverageCount2 = float(nTotalCount2)/map2.size();
 
+    cout << "map1.size: " << map1.size() << "map2.size: " << map2.size() << endl;
+
     outfile << "Total" << "," << nTotalCount1 << "," << nTotalCount2 << "," << fTotalGEH << "," << fTotalInaccuracy << endl;
     outfile << "Average" << "," << fAverageCount1 << "," << fAverageCount2 << "," << fAverageGEH << "," << fAverageInaccuracy << endl;
 
@@ -201,14 +203,14 @@ void TransportApplication::compareOpalAndRoamPerODPerDay(std::vector<std::string
     OpalTripAnalyser opal;
     opal.setFiles(strOpalInputCSVNames);
     opal.calculatePerODCount();
-    map<string, vector<int> > mapOpalPerODCount = opal.getPerODCount();
+    map<string, unsigned int> mapOpalPerODCount = sumUpVecRowToUIntCount(opal.getPerODCount());
 
     RoamResultAnalyser roam;
     roam.setFiles(strRoamInputCSVNames);
     roam.calculatePerODCount();
-    map<string, vector<int> > mapRoamPerODCount = roam.getPerODCount();
+    map<string, unsigned int> mapRoamPerODCount = sumUpVecRowToUIntCount(roam.getPerODCount());
 
-    exportCountComparison(strOutputCSVName, mapOpalPerODCount, mapRoamPerODCount, "Opal,Count,Roam,Count");
+    exportCountComparisonWithGEH(strOutputCSVName, mapOpalPerODCount, mapRoamPerODCount, "OD pair,Opal,Roam per person,GEH,Inaccuracy");
 }
 
 map<string, vector<string> > TransportApplication::importAllStationLines(std::string strAllLinesFileName) {
