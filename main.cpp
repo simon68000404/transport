@@ -22,22 +22,22 @@ using namespace std;
 
 #define EXTRACT_LINE_STATIONS 0
 
-#define OPAL_EXCEPTION_PER_MONTH 1
-#define OPAL_EXCEPTION_PER_DAY 1
+#define OPAL_EXCEPTION_PER_MONTH 0
+#define OPAL_EXCEPTION_PER_DAY 0
 
-#define ROAM_EXCEPTION_PER_MONTH 1
-#define ROAM_EXCEPTION_PER_DAY 1
+#define ROAM_EXCEPTION_PER_MONTH 0
+#define ROAM_EXCEPTION_PER_DAY 0
 
 #define PUNC_EXCEPTION_PER_MONTH 0
 
 #define ROAM_PERSON_VS_STOP_PER_STATION 0
 
-#define COMPLETENESS_CHECK 0
+#define COMPLETENESS_CHECK 1
 
 int main(int argc, char* argv[]) {
-	string puncFile = "/media/nlp/Maxtor/Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv";
-	string opalFile = "/media/nlp/Maxtor/Transport/Opal/JS_ALL_V.20160801_20160816.csvp";
-	string roamFile = "/media/nlp/Maxtor/Transport/Roam/Person/FINAL_MERGE_TABLE-01-08-2016_matched.csv";
+    string strHardDriveBaseName = "/media/vision/Maxtor/";
+	string puncFile = strHardDriveBaseName + "Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv";
+    string puncFile201609 = strHardDriveBaseName + "Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160930.csv";
 
     string opalFileNames[] = {
         "JS_ALL_V.20160801_20160816.csvp",
@@ -240,8 +240,8 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < 31; i++) {
         string strDate = i < 9 ? "0" + to_string(i + 1) : to_string(i + 1);
-        strOpalNames.push_back("/media/nlp/Maxtor/Transport/Opal/" + opalFileNames[i]);
-        strRoamNames.push_back("/media/nlp/Maxtor/Transport/Roam/Person/" + roamFileNames[i]);
+        strOpalNames.push_back(strHardDriveBaseName + "Transport/Opal/" + opalFileNames[i]);
+        strRoamNames.push_back(strHardDriveBaseName + "Transport/Roam/Person/" + roamFileNames[i]);
 
         strDayOnOutputNames.push_back("./Results/201608/Per Station/Daily Reports/opal_roam_per_station_08" + strDate + "_on.csv");
         strDayOffOutputNames.push_back("./Results/201608/Per Station/Daily Reports/opal_roam_per_station_08" + strDate + "_off.csv");
@@ -253,17 +253,17 @@ int main(int argc, char* argv[]) {
         strOpalExceptionBaseNames.push_back("./Results/201608/Exceptions/Opal/Daily Reports/exception_opal_08" + strDate + "_");
         strRoamExceptionBaseNames.push_back("./Results/201608/Exceptions/Roam/Daily Reports/exception_roam_08" + strDate + "_");
 
-        strRoamPerStopNames.push_back("/media/nlp/Maxtor/Transport/Roam/Stop/" + roamPerStopFileNames[i]);
+        strRoamPerStopNames.push_back(strHardDriveBaseName + "Transport/Roam/Stop/" + roamPerStopFileNames[i]);
         strRoamPerStopDayOnOutputNames.push_back("./Results/roam_pp_vs_ps_per_station_08" + strDate + "_on.csv");
         strRoamPerStopDayOffOutputNames.push_back("./Results/roam_pp_vs_ps_per_station_08" + strDate + "_off.csv");
     }
 
     for (int i = 0; i < 30; i++) {
-        strRoamNames201609.push_back("/media/nlp/Maxtor/Transport/Roam/Person/" + roamFileNames201609[i]);
-        strRoamPerStopNames201609.push_back("/media/nlp/Maxtor/Transport/Roam/Stop/" + roamPerStopFileNames201609[i]);
+        strRoamNames201609.push_back(strHardDriveBaseName + "Transport/Roam/Person/" + roamFileNames201609[i]);
+        strRoamPerStopNames201609.push_back(strHardDriveBaseName + "Transport/Roam/Stop/" + roamPerStopFileNames201609[i]);
     }
 
-    strCvmPerStopNames201609.push_back("/media/nlp/Maxtor/Transport/CVM/Stop/d__services_calcs.csv");
+    strCvmPerStopNames201609.push_back(strHardDriveBaseName + "Transport/CVM/Stop/d__services_calcs.csv");
 
 #if _201608
 #if OPAL_VS_ROAM_PER_STATION_PER_MONTH
@@ -306,7 +306,7 @@ int main(int argc, char* argv[]) {
 #endif
 
 #if EXTRACT_LINE_STATIONS
-    TransportApplication::generateAllLines("/media/nlp/Maxtor/Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv", "all_lines.csv");
+    TransportApplication::generateAllLines(strHardDriveBaseName + "Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv", "all_lines.csv");
 #endif
 
 #if OPAL_VS_ROAM_PER_LINE_PER_MONTH
@@ -393,6 +393,15 @@ int main(int argc, char* argv[]) {
         TransportApplication::comparerRoamPPAndRoamPSPerStationPerDay(strInputNames1, strInputNames2, strRoamPerStopDayOnOutputNames[i], strRoamPerStopDayOffOutputNames[i]);
     }
 #endif
+
+#if COMPLETENESS_CHECK
+    vector<string> strPuncInputCSVNames;
+    strPuncInputCSVNames.push_back(puncFile);
+    map<std::string, std::vector<std::string> > mapPerStopInputCSVNames;
+    mapPerStopInputCSVNames.insert(pair<string, vector<string> >("Roam", strRoamPerStopNames));
+    TransportApplication::checkCompleteness(strPuncInputCSVNames, mapPerStopInputCSVNames, 
+        "./Results/201608/Completeness Check/completeness_check.csv");
+#endif
 #endif
 
 #if _201609
@@ -405,10 +414,13 @@ int main(int argc, char* argv[]) {
 #endif
 
 #if COMPLETENESS_CHECK
-    // map<std::string, std::vector<std::string> > mapPerStopInputCSVNames;
-    // mapPerStopInputCSVNames.insert(pair<string, vector<string> >("Roam", strRoamPerStopNames201609));
-    // mapPerStopInputCSVNames.insert(pair<string, vector<string> >("Cvm", strCvmPerStopNames201609))
-    // TransportApplication::checkCompleteness(strPuncInputCSVNames, std::map<std::string, std::vector<std::string> > mapPerStopInputCSVNames, std::string strOutputCSVName);
+    vector<string> strPuncInputCSVNames;
+    strPuncInputCSVNames.push_back(puncFile201609);
+    map<std::string, std::vector<std::string> > mapPerStopInputCSVNames;
+    mapPerStopInputCSVNames.insert(pair<string, vector<string> >("Roam", strRoamPerStopNames201609));
+    mapPerStopInputCSVNames.insert(pair<string, vector<string> >("Cvm", strCvmPerStopNames201609));
+    TransportApplication::checkCompleteness(strPuncInputCSVNames, mapPerStopInputCSVNames, 
+        "./Results/201609/Completeness Check/completeness_check.csv");
 #endif
 #endif
 }

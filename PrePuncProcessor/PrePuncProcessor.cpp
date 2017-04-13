@@ -94,14 +94,16 @@ void PrePuncProcessor::extractTripNames() {
             }
             getline(ss, value, ',');
             // cout << c << " " << value << endl;
-            strServiceDate = value.substr(1, strServiceDate.length() - 2);
+            strServiceDate = value.substr(1, value.length() - 2);
+            // cout << strServiceDate << " ";
+
             stringstream ssServiceDate(strServiceDate);
             getline(ssServiceDate, strDay, '/');
             getline(ssServiceDate, strMonth, '/');
             getline(ssServiceDate, strYear);
             strServiceDate = strYear + '-' + strMonth + '-' + strDay;
 
-            cout << strServiceDate << endl;
+            // cout << strServiceDate << endl;
             // strServiceDate = // 01/08/2016 to 2016-08-01
             c++;
 
@@ -112,7 +114,7 @@ void PrePuncProcessor::extractTripNames() {
             }
             getline(ss, value, ',');
             // cout << c << " " << value << endl;
-            strTripName = value.substr(1, strTripName.length() - 2);
+            strTripName = value.substr(1, value.length() - 2);
             c++;
             
             while (getline(ss, value, ',')) {

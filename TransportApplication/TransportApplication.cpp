@@ -590,44 +590,76 @@ void TransportApplication::compareRoamAndCvmPerStationFromPerStopData(vector<str
     exportCountComparisonWithGEH(strOffOutputCSVName, mapOffRoamPerStopCount, mapOffCvmPerStopCount, "Station,Roam per stop,Cvm per stop,GEH,Inaccuracy");
 }
 
-void exportCompleteness(vector<string> vecAllTripNames, map<string, unsigned int> map1, map<string, unsigned int> map2, string strOutputCSVName, string strTitle) {
-    unsigned int nMap1CoverageCount = 0;
-    unsigned int nMap2CoverageCount = 0;
+void exportCompleteness(vector<string> vecAllTripNames, map<string, map<string, unsigned int> > &mapTripNamesFromPathFindingMethods, string strOutputCSVName) {
+    unsigned int nMapRoamCoverageCount = 0;
+    unsigned int nMapCvmCoverageCount = 0;
 
     ofstream outfile;
 
     outfile.open(strOutputCSVName);
-    outfile << strTitle << endl;
+    if (!outfile) {
+      cerr << "Can't write to output file " << strOutputCSVName << endl;
+      exit(1);
+    }
+    outfile << "All trip names in Punctuality,Roam,Cvm" << endl;
+
+    map<string, map<string, unsigned int> >::iterator itRoam = mapTripNamesFromPathFindingMethods.find("Roam");
+    map<string, map<string, unsigned int> >::iterator itCvm = mapTripNamesFromPathFindingMethods.find("Cvm");
+
+    map<string, unsigned int> mapRoam;
+    map<string, unsigned int> mapCvm;
+
+    if (itRoam != mapTripNamesFromPathFindingMethods.end()) {
+        mapRoam = itRoam->second;
+    }
+
+    if (itCvm != mapTripNamesFromPathFindingMethods.end()) {
+        mapCvm = itCvm->second;
+    }
 
     for (int i = 0; i < vecAllTripNames.size(); i++) {
         outfile << vecAllTripNames[i];
 
-        map<string, unsigned int>::iterator it1;
-        map<string, unsigned int>::iterator it2;
-        it1 = map1.find(vecAllTripNames[i]);
-        it2 = map2.find(vecAllTripNames[i]);
+        map<string, unsigned int>::iterator itMapRoam;
+        map<string, unsigned int>::iterator itMapCvm;
 
-        if (it1 != map1.end()) {
-            outfile << "," << it1->second;
-            nMap1CoverageCount++;
-        }
-        else {
-            outfile << ",0";
+        if (mapRoam.size() > 0) {
+            itMapRoam = mapRoam.find(vecAllTripNames[i]);
+
+            if (itMapRoam != mapRoam.end()) {
+                outfile << "," << itMapRoam->second;
+                nMapRoamCoverageCount++;
+            }
+            else {
+                outfile << ",0";
+            }
         }
 
-        if (it2 != map2.end()) {
-            outfile << "," << it2->second;
-            nMap2CoverageCount++;
-        }
-        else {
-            outfile << ",0";
+        if (mapCvm.size() > 0) {
+            itMapCvm = mapCvm.find(vecAllTripNames[i]);
+
+            cout << vecAllTripNames[i] << endl;
+
+            if (itMapCvm != mapCvm.end()) {
+                outfile << "," << itMapCvm->second;
+                nMapCvmCoverageCount++;
+                if (vecAllTripNames[i] == "10-A") {
+                    cout << "cvm" + vecAllTripNames[i] << " " << nMapCvmCoverageCount << endl;
+                }
+            }
+            else {
+                outfile << ",0";
+                if (vecAllTripNames[i] == "10-A") {
+                    cout << "cvm" + vecAllTripNames[i] << endl;
+                }
+            }
         }
 
         outfile << endl;
     }
 
-    outfile << "Total," << vecAllTripNames.size() << "," << nMap1CoverageCount << "," << nMap2CoverageCount << endl;
-    outfile << "Completeness Rate,," << float(nMap1CoverageCount)/float(vecAllTripNames.size()) << float(nMap2CoverageCount)/float(vecAllTripNames.size()) << endl;
+    outfile << "Total," << nMapRoamCoverageCount << "," << nMapCvmCoverageCount << endl;
+    outfile << "Completeness Rate," << float(nMapRoamCoverageCount)/float(vecAllTripNames.size()) << "," << float(nMapCvmCoverageCount)/float(vecAllTripNames.size()) << endl;
 
     outfile.close();
 }
@@ -652,15 +684,28 @@ void TransportApplication::checkCompleteness(std::vector<std::string> strPuncInp
         vecCvmInputFiles = it->second;
     }
 
-    RoamPerStopResultAnalyser roam;
-    roam.setFiles(vecRoamInputFiles);
-    roam.extractTripNameRows();
-    map<string, unsigned int> mapRoamTripNames = sumUpVecRowToUIntCount(roam.getTripNameRows());
+    map<string, unsigned int> mapRoamTripNames;
+    map<string, unsigned int> mapCvmTripNames;
+    map<string, map<string, unsigned int> > mapTripNamesFromPathFindingMethods;
 
-    CvmPerStopResultAnalyser cvm;
-    cvm.setFiles(vecCvmInputFiles);
-    cvm.extractTripNameRows();
-    map<string, unsigned int> mapcvmTripNames = sumUpVecRowToUIntCount(cvm.getTripNameRows());
+    if (vecRoamInputFiles.size() > 0) {
+        RoamPerStopResultAnalyser roam;
+        roam.setFiles(vecRoamInputFiles);
+        roam.extractTripNameRows();
+        mapRoamTripNames = sumUpVecRowToUIntCount(roam.getTripNameRows());
+        
+        mapTripNamesFromPathFindingMethods.insert(pair<string, map<string, unsigned int> >("Roam", mapRoamTripNames));
+    }
 
-    exportCompleteness(vecAllTripNames, mapRoamTripNames, mapRoamTripNames, strOutputCSVName, "Trips from Punctuality,Roam,Cvm");
+    if (vecCvmInputFiles.size() > 0) {
+        CvmPerStopResultAnalyser cvm;
+        cvm.setFiles(vecCvmInputFiles);
+        cvm.extractTripNameRows();
+        mapCvmTripNames = sumUpVecRowToUIntCount(cvm.getTripNameRows());
+
+        mapTripNamesFromPathFindingMethods.insert(pair<string, map<string, unsigned int> >("Cvm", mapCvmTripNames));
+    }
+
+
+    exportCompleteness(vecAllTripNames, mapTripNamesFromPathFindingMethods, strOutputCSVName);
 }
