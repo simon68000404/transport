@@ -6,8 +6,8 @@
 #include <string>
 using namespace std;
 
-#define _201608 1
-#define _201609 0
+#define _201608 0
+#define _201609 1
 
 #define OPAL_VS_ROAM_PER_STATION_PER_MONTH 0
 #define OPAL_VS_ROAM_PER_STATION_PER_DAY 0
@@ -35,7 +35,7 @@ using namespace std;
 #define COMPLETENESS_CHECK 1
 
 int main(int argc, char* argv[]) {
-    string strHardDriveBaseName = "/media/vision/Maxtor/";
+    string strHardDriveBaseName = "/media/nlp/Maxtor/";
 	string puncFile = strHardDriveBaseName + "Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv";
     string puncFile201609 = strHardDriveBaseName + "Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160930.csv";
 

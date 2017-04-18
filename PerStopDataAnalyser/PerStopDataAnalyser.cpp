@@ -55,7 +55,7 @@ RoamPerStopResultAnalyser::RoamPerStopResultAnalyser() {
     m_iBoardingCountCol = 28;
 
     m_iServiceDateCol = 2;
-    m_iTripNameCol = 1;
+    m_iTripNameCol = 8;
 
     m_cDivider = ',';
 }
@@ -166,18 +166,6 @@ void RoamPerStopResultAnalyser::extractTripNameRows() {
             string strServiceDate = "";
             string strTripName = "";
 
-            while(c < m_iTripNameCol) {
-                getline(ss, value, m_cDivider);
-                // cout << c << " " << value << endl;
-                c++;
-            }
-
-            // Trip Name
-            getline(ss, value, m_cDivider);
-            // cout << c << " " << value << endl;
-            strTripName = value.substr(1, value.length() - 9); // to remove the postfix "-JOINED"
-            c++;
-
             while(c < m_iServiceDateCol) {
                 getline(ss, value, m_cDivider);
                 c++;
@@ -187,6 +175,18 @@ void RoamPerStopResultAnalyser::extractTripNameRows() {
             getline(ss, value, m_cDivider);
             // cout << c << " " << value << endl;
             strServiceDate = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iTripNameCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+
+            // Trip Name
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            strTripName = value.substr(1, value.length() - 2); // to remove the postfix "-JOINED"
             c++;
             
             while (getline(ss, value, m_cDivider)) {
