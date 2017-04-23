@@ -8,6 +8,10 @@ using namespace std;
 
 PerPersonTripDataAnalyser::PerPersonTripDataAnalyser() {
     this->m_nTotalRows = 0;
+
+    this->m_vecStationsToSkip.push_back("Newcastle");
+    this->m_vecStationsToSkip.push_back("Civic");
+    this->m_vecStationsToSkip.push_back("Wickham");
 }
 
 bool PerPersonTripDataAnalyser::setFiles(vector<string> strFileNames) {
@@ -33,6 +37,18 @@ OpalTripAnalyser::OpalTripAnalyser() {
 
     // m_strExceptionNoTapOn = "Didn't tap on";
     // m_strExceptionNoTapOff = "Didn't tap off";
+}
+
+bool OpalTripAnalyser::shouldSkipOpalRecord(std::string onStopName, std::string offStopName) {
+    bool ret = false;
+    for (int i = 0; i < m_vecStationsToSkip.size(); i++) {
+        if (onStopName == m_vecStationsToSkip[i] || offStopName == m_vecStationsToSkip[i]) {
+            ret = true;
+            break;
+        }
+    }
+
+    return ret;
 }
 
 void OpalTripAnalyser::calculatePerStationCount() {
@@ -105,7 +121,9 @@ void OpalTripAnalyser::calculatePerStationCount() {
                         if (onStopName.compare(offStopName) != 0) {
                             onStopName = onStopName.substr(0, onStopName.length() - 8);
                             offStopName = offStopName.substr(0, offStopName.length() - 8);
-                            updatePerStationCount(onStopName, offStopName, r);
+                            if (!shouldSkipOpalRecord(onStopName, offStopName)) {
+                                updatePerStationCount(onStopName, offStopName, r);
+                            }
                         }
                     }
                 }
@@ -190,7 +208,9 @@ void OpalTripAnalyser::calculatePerODCount() {
                         if (onStopName.compare(offStopName) != 0) {
                             onStopName = onStopName.substr(0, onStopName.length() - 8);
                             offStopName = offStopName.substr(0, offStopName.length() - 8);
-                            updatePerODCount(onStopName, offStopName, r);
+                            if (!shouldSkipOpalRecord(onStopName, offStopName)) {
+                                updatePerODCount(onStopName, offStopName, r);
+                            }
                         }
                     }
                 }
@@ -361,6 +381,9 @@ void PerPersonTripDataAnalyser::updatePerLineCount(std::string strOnStopName, st
     map<string, vector<string> >::iterator itStationLines;
     string strMountAbbr = "Mt";
     string strNowra = " (Nowra)";
+    string strUniversity = " (University)";
+    string strAirport = " Airport";
+    string strRacecourse = " Racecourse";
 
     itStationLines = m_mapStationLines.find(strOnStopName);
     vector<string> vecOnStationLines;
@@ -383,6 +406,7 @@ void PerPersonTripDataAnalyser::updatePerLineCount(std::string strOnStopName, st
             }
         }
         
+        // Bomaderry -> Bomaderry (Nowra)
         if (bUnknown == true) {
             string str2;
             str2 = strOnStopName + strNowra;
@@ -394,8 +418,45 @@ void PerPersonTripDataAnalyser::updatePerLineCount(std::string strOnStopName, st
             }
         }
 
+        // Warabrook -> Warabrook (University)
+        if (bUnknown == true) {
+            string str2;
+            str2 = strOnStopName + strUniversity;
+            
+            map<string, vector<string> >::iterator it2 = m_mapStationLines.find(str2);
+            if (it2 != m_mapStationLines.end()) {
+                vecOnStationLines = m_mapStationLines.find(str2)->second;
+                bUnknown = false;
+            }
+        }
+
+        // International -> International Airport
+        // Domestic -> Domestic Airport
+        if (bUnknown == true) {
+            string str2;
+            str2 = strOnStopName + strAirport;
+            
+            map<string, vector<string> >::iterator it2 = m_mapStationLines.find(str2);
+            if (it2 != m_mapStationLines.end()) {
+                vecOnStationLines = m_mapStationLines.find(str2)->second;
+                bUnknown = false;
+            }
+        }
+
+        // Kembla Grange -> Kembla Grange Racecourse
+        if (bUnknown == true) {
+            string str2;
+            str2 = strOnStopName + strRacecourse;
+            
+            map<string, vector<string> >::iterator it2 = m_mapStationLines.find(str2);
+            if (it2 != m_mapStationLines.end()) {
+                vecOnStationLines = m_mapStationLines.find(str2)->second;
+                bUnknown = false;
+            }
+        }
+
         if (bUnknown) {
-            cout << "Unknown station: " << strOnStopName << endl;
+            cout << "Unknown on station: " << strOnStopName << endl;
         }
     }
 
@@ -448,14 +509,51 @@ void PerPersonTripDataAnalyser::updatePerLineCount(std::string strOnStopName, st
             }
         }
 
+        // Warabrook -> Warabrook (University)
+        if (bUnknown == true) {
+            string str2;
+            str2 = strOffStopName + strUniversity;
+            
+            map<string, vector<string> >::iterator it2 = m_mapStationLines.find(str2);
+            if (it2 != m_mapStationLines.end()) {
+                vecOffStationLines = m_mapStationLines.find(str2)->second;
+                bUnknown = false;
+            }
+        }
+
+        // International -> International Airport
+        // Domestic -> Domestic Airport
+        if (bUnknown == true) {
+            string str2;
+            str2 = strOffStopName + strAirport;
+            
+            map<string, vector<string> >::iterator it2 = m_mapStationLines.find(str2);
+            if (it2 != m_mapStationLines.end()) {
+                vecOffStationLines = m_mapStationLines.find(str2)->second;
+                bUnknown = false;
+            }
+        }
+
+        // Kembla Grange -> Kembla Grange Racecourse
+        if (bUnknown == true) {
+            string str2;
+            str2 = strOffStopName + strRacecourse;
+            
+            map<string, vector<string> >::iterator it2 = m_mapStationLines.find(str2);
+            if (it2 != m_mapStationLines.end()) {
+                vecOffStationLines = m_mapStationLines.find(str2)->second;
+                bUnknown = false;
+            }
+        }
+
         if (bUnknown) {
-            cout << "Unknown station: " << strOffStopName << endl;
+            cout << "Unknown off station: " << strOffStopName << endl;
         }
     }
     for (int i = 0; i < vecOffStationLines.size(); i++) {
         map<string, vector<int> >::iterator itOff = m_mapCountPerLine.find(vecOffStationLines[i]);
         if (itOff == m_mapCountPerLine.end()) {
-            // cout << "doesn't have" << strOnStopName << endl;
+            // cout << "doesn't have" << strOffStopName << endl;
             vector<int> vec;
             vec.push_back(nRow);
 
@@ -901,7 +999,9 @@ void OpalTripAnalyser::calculatePerLineCount() {
                         if (onStopName.compare(offStopName) != 0) {
                             onStopName = onStopName.substr(0, onStopName.length() - 8);
                             offStopName = offStopName.substr(0, offStopName.length() - 8);
-                            updatePerLineCount(onStopName, offStopName, r);
+                            if (!shouldSkipOpalRecord(onStopName, offStopName)) {
+                                updatePerLineCount(onStopName, offStopName, r);
+                            }
                         }
                     }
                 }

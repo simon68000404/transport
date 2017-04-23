@@ -105,6 +105,8 @@ void exportCountComparisonWithGEH(string fileName, map<string, unsigned int> &ma
     float fTotalGEH = 0.0f;
     float fSumGEH = 0.0f;
     float fAverageGEH = 0.0f;
+    bool bGEHLT5 = false;
+    unsigned int nGEHLT5Count = 0;
 
     float fSumInaccuracy = 0.0f;
     float fAverageInaccuracy = 0.0f;
@@ -132,6 +134,8 @@ void exportCountComparisonWithGEH(string fileName, map<string, unsigned int> &ma
             unsigned int count2 = it2->second;
             nTotalCount2 += count2;
             fGEH = sqrt(2.0f * float((count2 - count1) * (count2 - count1)) / float(count2 + count1));
+            bGEHLT5 = fGEH < 5 ? true : false;
+            nGEHLT5Count += bGEHLT5 == true ? 1 : 0;
 
             if (count1 > 0) {
                 fAccuracy = float(count2)/float(count1);
@@ -142,15 +146,17 @@ void exportCountComparisonWithGEH(string fileName, map<string, unsigned int> &ma
                 fInaccuracy = 1;
             }
 
-            outfile << strKey << ", " << count1 << ", " << count2 << ", " << fGEH << "," << fInaccuracy << endl;
+            outfile << strKey << ", " << count1 << ", " << count2 << ", " << fGEH << "," << bGEHLT5 << "," << fInaccuracy << endl;
         }
         else {
             fGEH = sqrt(2.0f * float(count1));
+            bGEHLT5 = fGEH < 5 ? true : false;
+            nGEHLT5Count += bGEHLT5 == true ? 1 : 0;
 
             fAccuracy = 0;
             fInaccuracy = 1;
 
-            outfile << strKey << ", " << count1 << ", " << 0 << ", " << fGEH << "," << fInaccuracy << endl;
+            outfile << strKey << ", " << count1 << ", " << 0 << ", " << fGEH << "," << bGEHLT5 << "," << fInaccuracy << endl;
         }
 
         fSumInaccuracy += fInaccuracy;
@@ -168,8 +174,8 @@ void exportCountComparisonWithGEH(string fileName, map<string, unsigned int> &ma
 
     cout << "map1.size: " << map1.size() << "map2.size: " << map2.size() << endl;
 
-    outfile << "Total" << "," << nTotalCount1 << "," << nTotalCount2 << "," << fTotalGEH << "," << fTotalInaccuracy << endl;
-    outfile << "Average" << "," << fAverageCount1 << "," << fAverageCount2 << "," << fAverageGEH << "," << fAverageInaccuracy << endl;
+    outfile << "Total" << "," << nTotalCount1 << "," << nTotalCount2 << "," << fTotalGEH << "," << nGEHLT5Count << "," << fTotalInaccuracy << endl;
+    outfile << "Average" << "," << fAverageCount1 << "," << fAverageCount2 << "," << fAverageGEH << ",," << fAverageInaccuracy << endl;
 
     outfile.close();
 }
@@ -197,8 +203,8 @@ void TransportApplication::compareOpalAndRoamPerStationPerDay(vector<string> str
     map<string, unsigned int> mapOnRoamPerStationCount = sumUpVecRowToUIntCount(roam.getOnPerStationCount());
     map<string, unsigned int> mapOffRoamPerStationCount = sumUpVecRowToUIntCount(roam.getOffPerStationCount());
 
-    exportCountComparisonWithGEH(strOnOutputCSVName, mapOnOpalPerStationCount, mapOnRoamPerStationCount, "Station,Opal,Roam per person,GEH");
-    exportCountComparisonWithGEH(strOffOutputCSVName, mapOffOpalPerStationCount, mapOffRoamPerStationCount, "Station,Opal,Roam per person,GEH");
+    exportCountComparisonWithGEH(strOnOutputCSVName, mapOnOpalPerStationCount, mapOnRoamPerStationCount, "Station,Opal,Roam per person,GEH,GEH<5,Inaccuracy");
+    exportCountComparisonWithGEH(strOffOutputCSVName, mapOffOpalPerStationCount, mapOffRoamPerStationCount, "Station,Opal,Roam per person,GEH,GEH<5,Inaccuracy");
 }
 
 void TransportApplication::compareOpalAndRoamPerODPerDay(std::vector<std::string> strOpalInputCSVNames, std::vector<std::string> strRoamInputCSVNames, 
@@ -221,7 +227,7 @@ void TransportApplication::compareOpalAndRoamPerODPerDay(std::vector<std::string
     roam.calculatePerODCount();
     map<string, unsigned int> mapRoamPerODCount = sumUpVecRowToUIntCount(roam.getPerODCount());
 
-    exportCountComparisonWithGEH(strOutputCSVName, mapOpalPerODCount, mapRoamPerODCount, "OD pair,Opal,Roam per person,GEH,Inaccuracy");
+    exportCountComparisonWithGEH(strOutputCSVName, mapOpalPerODCount, mapRoamPerODCount, "OD pair,Opal,Roam per person,GEH,GEH<5,Inaccuracy");
 }
 
 map<string, vector<string> > TransportApplication::importAllStationLines(std::string strAllLinesFileName) {
@@ -282,6 +288,77 @@ map<string, vector<string> > TransportApplication::importAllStationLines(std::st
     return mapAllStationLines;
 }
 
+map<string, vector<string> > TransportApplication::importAllStationLinesOneToOne(std::string strAllLinesFileName, unsigned int iStationCol, unsigned int iLineCol) {
+    ifstream infile;
+    infile.open(strAllLinesFileName.c_str());
+    if (!infile.is_open()) {
+        cout << "File " << strAllLinesFileName << " couldn't be opened." << endl;
+        return map<string, vector<string>>();
+    }
+
+    cout << "Loading station to line mapping: " << strAllLinesFileName << endl;
+
+    string value;
+    string line;
+    map<string, vector<string> > mapAllStationLines;
+
+    int r = 1; // Avoid first row 
+    struct tm tm = {};
+    getline(infile, line);
+    while (getline(infile, line)) {
+        int c = 0;
+        stringstream ss(line);
+
+        string strStationName = "";
+        string strLineName = "";
+
+        while(c < iStationCol) {
+            getline(ss, value, ',');
+            // cout << c << " " << value << endl;
+            c++;
+        }
+
+        // station
+        getline(ss, value, ',');
+        // cout << c << " " << value << endl;
+        strStationName = value.substr(1, value.length() - 2);
+        c++;
+
+        while(c < iLineCol) {
+            getline(ss, value, ',');
+            c++;
+        }    
+
+        // line
+        getline(ss, value, ',');
+        // cout << c << " " << value << endl;
+        strLineName = value.substr(1, value.length() - 2);
+        c++;
+        
+        while (getline(ss, value, ',')) {
+            // cout << r << " " << c << " " << value << endl;
+            c++;
+        }
+
+        map<string, vector<string> >::iterator it = mapAllStationLines.find(strStationName);
+        if (it != mapAllStationLines.end()) {
+            vector<string> &vec = it->second;
+            vec.push_back(strLineName);
+            // cout << "found " << strStationName << " " << vec.size() << endl;
+        }
+        else {
+            vector<string> vec;
+            vec.push_back(strLineName);
+            mapAllStationLines.insert(pair<string, vector<string> >(strStationName, vec));
+            // cout << "not found " << strStationName << endl;
+        }
+
+        r++;
+    }
+
+    return mapAllStationLines;
+}
+
 void TransportApplication::compareOpalAndRoamPerLinePerDay(std::vector<std::string> strOpalInputCSVNames, std::vector<std::string> strRoamInputCSVNames, 
     std::string strOutputCSVName, std::map<std::string, vector<std::string> > mapStationLines) {
     int nOpalCSVCount = strOpalInputCSVNames.size();
@@ -298,15 +375,16 @@ void TransportApplication::compareOpalAndRoamPerLinePerDay(std::vector<std::stri
 
     opal.calculatePerLineCount();
 
-    map<string, vector<int> > mapOpalPerLineCount = opal.getPerLineCount();
+    map<string, unsigned int> mapOpalPerLineCount = sumUpVecRowToUIntCount(opal.getPerLineCount());
 
     RoamResultAnalyser roam;
     roam.setFiles(strRoamInputCSVNames);
     roam.setStationLines(mapStationLines);
     roam.calculatePerLineCount();
-    map<string, vector<int> > mapRoamPerLineCount = roam.getPerLineCount();
+    map<string, unsigned int> mapRoamPerLineCount = sumUpVecRowToUIntCount(roam.getPerLineCount());
 
-    exportCountComparison(strOutputCSVName, mapOpalPerLineCount, mapRoamPerLineCount, "Opal,Count,Roam,Count");
+    // exportCountComparison(strOutputCSVName, mapOpalPerLineCount, mapRoamPerLineCount, "Opal,Count,Roam,Count");
+    exportCountComparisonWithGEH(strOutputCSVName, mapOpalPerLineCount, mapRoamPerLineCount, "Line,Opal,Roam per person,GEH,GEH<5,Inaccuracy");
 }
 
 
@@ -586,8 +664,8 @@ void TransportApplication::compareRoamAndCvmPerStationFromPerStopData(vector<str
     map<string, unsigned int> mapOnCvmPerStopCount = sumUpVecCountToUIntCount(cvmPerStop.getOnPerStationCount());
     map<string, unsigned int> mapOffCvmPerStopCount = sumUpVecCountToUIntCount(cvmPerStop.getOffPerStationCount());
 
-    exportCountComparisonWithGEH(strOnOutputCSVName, mapOnRoamPerStopCount, mapOnCvmPerStopCount, "Station,Roam per stop,Cvm per stop,GEH,Inaccuracy");
-    exportCountComparisonWithGEH(strOffOutputCSVName, mapOffRoamPerStopCount, mapOffCvmPerStopCount, "Station,Roam per stop,Cvm per stop,GEH,Inaccuracy");
+    exportCountComparisonWithGEH(strOnOutputCSVName, mapOnRoamPerStopCount, mapOnCvmPerStopCount, "Station,Roam per stop,Cvm per stop,GEH,GEH<5,Inaccuracy");
+    exportCountComparisonWithGEH(strOffOutputCSVName, mapOffRoamPerStopCount, mapOffCvmPerStopCount, "Station,Roam per stop,Cvm per stop,GEH,GEH<5,Inaccuracy");
 }
 
 void exportCompleteness(vector<string> vecAllTripNames, map<string, map<string, unsigned int> > &mapTripNamesFromPathFindingMethods, string strOutputCSVName) {

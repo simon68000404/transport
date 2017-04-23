@@ -52,6 +52,8 @@ protected:
 	std::map<std::string, std::vector<std::string> > m_mapStationLines;
 
 	int m_nTotalRows;
+	
+	std::vector<std::string> m_vecStationsToSkip;
 
 	// std::map<std::string, std::vector<int> > m_mapExceptions;
 };
@@ -72,6 +74,8 @@ private:
 	void updateUnknownOnCount(int nRow);
 	void updateUnknownOffCount(int nRow);
 	void updateSameOnOffCount(int nRow);
+
+	bool shouldSkipOpalRecord(std::string onStopName, std::string offStopName);
 
 	int m_iOnDateCol;
 	int m_iOnTimeCol;

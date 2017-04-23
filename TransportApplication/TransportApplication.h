@@ -25,6 +25,7 @@ public:
 	static void generateAllLines(std::string strPuncFileName, std::string strOutputCSVNameBaseName);
 
 	static std::map<std::string, std::vector<std::string> > importAllStationLines(std::string strAllLinesFileName);
+	static std::map<std::string, std::vector<std::string> > importAllStationLinesOneToOne(std::string strAllLinesFileName, unsigned int iStationCol, unsigned int iLineCol);
 };
 
 #endif
