@@ -113,6 +113,10 @@ void OpalTripAnalyser::calculatePerStationCount() {
                 c++;
             }
 
+            // if (onStopName == "Coalcliff Station") {
+            //     cout << line << endl;
+            // }
+
             if (tripType == "Train") {
                 m_nTotalRows++;
 
@@ -337,28 +341,32 @@ std::vector<int> OpalTripAnalyser::getSameOnOffCount() {
 }
 
 void PerPersonTripDataAnalyser::updatePerStationCount(std::string strOnStopName, std::string strOffStopName, int nRow) {
-	map<string, vector<int> >::iterator it = m_mapOnCountPerStation.find(strOnStopName);
-	if (it == m_mapOnCountPerStation.end()) {
-        // cout << "doesn't have" << strOnStopName << endl;
-        vector<int> vecOn;
-        vecOn.push_back(nRow);
+    if (strOnStopName.size() > 0) {
+    	map<string, vector<int> >::iterator it = m_mapOnCountPerStation.find(strOnStopName);
+    	if (it == m_mapOnCountPerStation.end()) {
+            // cout << "doesn't have" << strOnStopName << endl;
+            vector<int> vecOn;
+            vecOn.push_back(nRow);
 
-		m_mapOnCountPerStation.insert(pair<string, vector<int> >(strOnStopName, vecOn));
-	}
-    else {
-        it->second.push_back(nRow);
+    		m_mapOnCountPerStation.insert(pair<string, vector<int> >(strOnStopName, vecOn));
+    	}
+        else {
+            it->second.push_back(nRow);
+        }
     }
 
-    map<string, vector<int> >::iterator it2 = m_mapOffCountPerStation.find(strOffStopName);
-    if (it2 == m_mapOffCountPerStation.end()) {
-        // cout << "doesn't have" << strOnStopName << endl;
-        vector<int> vecOff;
-        vecOff.push_back(nRow);
+    if (strOffStopName.size() > 0) {
+        map<string, vector<int> >::iterator it2 = m_mapOffCountPerStation.find(strOffStopName);
+        if (it2 == m_mapOffCountPerStation.end()) {
+            // cout << "doesn't have" << strOnStopName << endl;
+            vector<int> vecOff;
+            vecOff.push_back(nRow);
 
-        m_mapOffCountPerStation.insert(pair<string, vector<int> >(strOffStopName, vecOff));
-    }
-    else {
-        it2->second.push_back(nRow); 
+            m_mapOffCountPerStation.insert(pair<string, vector<int> >(strOffStopName, vecOff));
+        }
+        else {
+            it2->second.push_back(nRow); 
+        }
     }
 }
 
@@ -1080,4 +1088,426 @@ void RoamResultAnalyser::updateMT2TripsCount(int nRow) {
 
 vector<int> RoamResultAnalyser::getMT2TripsCount() {
     return m_vecMT2TripsCount;    
+}
+
+CvmResultAnalyser::CvmResultAnalyser() {
+    m_iRunIdCol = 4;
+    m_iSubTripIndex = 8;
+    m_iOrigStopStationCol = 21;
+    m_iDestStopStationCol = 22;
+    m_iBoardingStopStationCol = 23;
+    m_iAlightingStopStationCol = 24;
+    m_iPassengerBehaviourCol = 25;
+    m_iPassengerTripIdCol = 26;
+
+    m_cDivider = ',';
+}
+void CvmResultAnalyser::calculatePerStationCount() {
+    ifstream infile;
+    for (int i = 0; i < m_strInfileNames.size(); i++) {
+        infile.open(m_strInfileNames[i].c_str());
+        if (!infile.is_open()) {
+            cout << "File " << m_strInfileNames[i] << " couldn't be opened." << endl;
+            return;
+        }
+
+        cout << "Analysing per person cvm: " << m_strInfileNames[i] << endl;
+
+        string value;
+        string line;
+
+        int r = 1; // Avoid first row 
+        struct tm tm = {};
+        getline(infile, line);
+        while (getline(infile, line)) {
+            int c = 0;
+            stringstream ss(line);
+
+            string strRunId = "";
+            string strBoardingStopStation = "";
+            string strAlightingStopStation = "";
+            string strPassengerBehaviour = "";
+            unsigned int iPassengerTripId = 0;
+
+            while(c < m_iRunIdCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+
+            // trip id
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            strRunId = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iOrigStopStationCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+            // orig stop
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            string strOriginStation = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iBoardingStopStationCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+
+            // boarding stop
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            strBoardingStopStation = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iAlightingStopStationCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+
+            // alighting stop
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            strAlightingStopStation = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iPassengerBehaviourCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+
+            // passenger behaviour
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            strPassengerBehaviour = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iPassengerTripIdCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+
+            // passenger trip id
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            iPassengerTripId = atoi(value.c_str());
+            c++;
+            
+            while (getline(ss, value, m_cDivider)) {
+                // cout << r << " " << c << " " << value << endl;
+                c++;
+            }
+
+            // if (strOriginStation == "Coalcliff") {
+            //     cout << line << endl;
+            // }
+
+            if (strPassengerBehaviour == "SINGLE TRIP") {
+                updatePerStationCount(strBoardingStopStation, strAlightingStopStation, r);
+            }
+            else if (strPassengerBehaviour == "BOARDING TRIP") {
+                updatePerStationCount(strBoardingStopStation, "", r);
+            }
+            else if (strPassengerBehaviour == "ALIGHTING TRIP") {
+                updatePerStationCount("", strAlightingStopStation, r);
+            }
+            else if (strPassengerBehaviour == "INTERMEDIATE TRIP") {
+            }
+            else {
+                cout << "Wrong passenger behaviour: " << strPassengerBehaviour << endl;
+            }
+
+            r++;
+        }
+
+        infile.close();
+    }   
+}
+void CvmResultAnalyser::calculatePerStationCountWithTransfers() {
+    ifstream infile;
+    for (int i = 0; i < m_strInfileNames.size(); i++) {
+        infile.open(m_strInfileNames[i].c_str());
+        if (!infile.is_open()) {
+            cout << "File " << m_strInfileNames[i] << " couldn't be opened." << endl;
+            return;
+        }
+
+        cout << "Analysing per person cvm: " << m_strInfileNames[i] << endl;
+
+        string value;
+        string line;
+
+        string strLastPassengerTripId = "";
+
+        int r = 1; // Avoid first row 
+        struct tm tm = {};
+        getline(infile, line);
+        while (getline(infile, line)) {
+            int c = 0;
+            stringstream ss(line);
+
+            string strRunId = "";
+            string strBoardingStopStation = "";
+            string strAlightingStopStation = "";
+            string strPassengerBehaviour = "";
+            string strPassengerTripId = "";
+
+            while(c < m_iRunIdCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+
+            // trip id
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            strRunId = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iOrigStopStationCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+            // orig stop
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            string strOriginStation = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iBoardingStopStationCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+
+            // boarding stop
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            strBoardingStopStation = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iAlightingStopStationCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+
+            // alighting stop
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            strAlightingStopStation = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iPassengerBehaviourCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+
+            // passenger behaviour
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            strPassengerBehaviour = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iPassengerTripIdCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+
+            // passenger trip id
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            strPassengerTripId = value;
+            c++;
+            
+            while (getline(ss, value, m_cDivider)) {
+                // cout << r << " " << c << " " << value << endl;
+                c++;
+            }
+
+
+            // if (strLastPassengerTripId != strPassengerTripId) {
+            //                     cout << strLastPassengerTripId << endl;
+            //     cout << strPassengerTripId << endl;
+            //     cout << "last: " + strLastPassengerTripId + " this time: " + strPassengerTripId + " !=? " << (strLastPassengerTripId != strPassengerTripId) << endl;
+ 
+            //     updatePerStationCount(strBoardingStopStation, strAlightingStopStation, r);
+            // }
+            // else {
+            //    updatePerStationCount("", strAlightingStopStation, r);
+            // }
+
+            // if (strPassengerBehaviour == "SINGLE TRIP" || strPassengerBehaviour == "BOARDING TRIP") {
+            //     updatePerStationCount(strBoardingStopStation, strAlightingStopStation, r);
+            //     cout << "s or b: " << strBoardingStopStation << "----" << strAlightingStopStation << "----" << line << endl;
+            // }
+            // else {
+            //     updatePerStationCount("", strAlightingStopStation, r);
+            //     cout << "others: " << strBoardingStopStation << "----" << strAlightingStopStation << "----" << line << endl;
+            // }
+
+            updatePerStationCount(strBoardingStopStation, strAlightingStopStation, r);
+
+            // if (strBoardingStopStation == "Mindaribba") {
+            //     cout << line << endl;
+            // }
+
+            r++;
+            // strLastPassengerTripId = strPassengerTripId;
+        }
+
+        infile.close();
+    }  
+}
+void CvmResultAnalyser::calculatePerODCount() {
+    ifstream infile;
+    for (int i = 0; i < m_strInfileNames.size(); i++) {
+        infile.open(m_strInfileNames[i].c_str());
+        if (!infile.is_open()) {
+            cout << "File " << m_strInfileNames[i] << " couldn't be opened." << endl;
+            return;
+        }
+
+        string value;
+        string line;
+
+        int r = 1; // Avoid first row 
+        struct tm tm = {};
+        getline(infile, line);
+        while (getline(infile, line)) {
+            int c = 0;
+            stringstream ss(line);
+
+            string strSubTripId = "";
+            string strOrigStopStation = "";
+            string strDestStopStation = "";
+
+            while(c < m_iSubTripIndex) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+            // sub boarding trip id
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            strSubTripId = value;
+            c++;
+
+            while(c < m_iOrigStopStationCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+            // orig stop
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            strOrigStopStation = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iDestStopStationCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+            // dest stop
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            strDestStopStation = value.substr(1, value.length() - 2);
+            c++;
+            
+            while (getline(ss, value, m_cDivider)) {
+                // cout << r << " " << c << " " << value << endl;
+                c++;
+            }
+
+            if (strSubTripId == "1") {
+                updatePerODCount(strOrigStopStation, strDestStopStation, r);
+            }
+
+            r++;
+        }
+
+        infile.close();
+    }   
+}
+void CvmResultAnalyser::calculatePerLineCount() {
+    ifstream infile;
+    for (int i = 0; i < m_strInfileNames.size(); i++) {
+        infile.open(m_strInfileNames[i].c_str());
+        if (!infile.is_open()) {
+            cout << "File " << m_strInfileNames[i] << " couldn't be opened." << endl;
+            return;
+        }
+
+        string value;
+        string line;
+
+        int r = 1; // Avoid first row 
+        struct tm tm = {};
+        getline(infile, line);
+        while (getline(infile, line)) {
+            int c = 0;
+            stringstream ss(line);
+
+            string strSubTripId = "";
+            string strOrigStopStation = "";
+            string strDestStopStation = "";
+
+            while(c < m_iSubTripIndex) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+            // sub boarding trip id
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            strSubTripId = value;
+            c++;
+
+            while(c < m_iOrigStopStationCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+            // orig stop
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            strOrigStopStation = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iDestStopStationCol) {
+                getline(ss, value, m_cDivider);
+                // cout << c << " " << value << endl;
+                c++;
+            }
+            // dest stop
+            getline(ss, value, m_cDivider);
+            // cout << c << " " << value << endl;
+            strDestStopStation = value.substr(1, value.length() - 2);
+            c++;
+            
+            while (getline(ss, value, m_cDivider)) {
+                // cout << r << " " << c << " " << value << endl;
+                c++;
+            }
+
+            if (strSubTripId == "1") {
+                updatePerLineCount(strOrigStopStation, strDestStopStation, r);
+            }
+
+            r++;
+        }
+
+        infile.close();
+    }  
 }

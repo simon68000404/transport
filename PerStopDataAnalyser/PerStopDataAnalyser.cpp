@@ -1,4 +1,5 @@
 #include "PerStopDataAnalyser.h"
+#include "../PrePuncProcessor/PrePuncProcessor.h"
 
 #include <iostream>
 #include <sstream>
@@ -229,7 +230,7 @@ void CvmPerStopResultAnalyser::calculatePerStationCount() {
             return;
         }
 
-        cout << "Analysing " << m_strInfileNames[i] << endl;
+        cout << "Analysing aaaaaaaaaaa" << m_strInfileNames[i] << endl;
 
         string value;
         string line;
@@ -285,6 +286,10 @@ void CvmPerStopResultAnalyser::calculatePerStationCount() {
             }
 
             updatePerStationCount(strThisStopStation, nBoardingCount, nUnboardingCount);
+
+            //             if (strThisStopStation == "Mindaribba") {
+            //     cout << line << endl;
+            // }
 
             r++;
         }

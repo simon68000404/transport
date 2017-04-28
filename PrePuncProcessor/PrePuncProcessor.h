@@ -12,6 +12,19 @@ public:
     std::set<std::string> strStationNames;
 };
 
+class TrainTripStop {
+public:
+    std::string strServiceDate; // "2016-09-01"
+    std::string strTripID; // "204S"
+    std::string strStationName; // "Central"
+    std::string strDateTime; // 2016-09-01 or Missing
+};
+
+// class TrainTrip {
+// public:
+//     std::vector<TrainStop> vecTrainStops; 
+// };
+
 class PrePuncProcessor {
 public:
     // PrePuncProcessor(int tripNameCol, 
@@ -30,6 +43,9 @@ public:
 
     void extractTripNames();
     std::vector<std::string> getTripNames();
+
+    void extractTripStops();
+    std::vector<TrainTripStop> & getTripStops();
 
     bool isActDprtLaterThanArrv(std::string fileName);
     bool doesActStationMatchPlanned();
@@ -50,6 +66,7 @@ private:
     void updateExceptionDprtLTArrv(int nRow, std::string strThatRow);
 
     void updateTripNames(std::string strTripName);
+    void updateTripStops(std::string strServiceDate, std::string strTripName, std::string strStationName, std::string strArrivalTime);
 
     int compareTimeStringLT(std::string t1, std::string t2);
     int m_iPlannedDprtTimeCol;
@@ -78,6 +95,8 @@ private:
     std::set<std::string> m_setTripNames;
 
     unsigned int m_nTotalRows;
+
+    std::vector<TrainTripStop> m_vecAllTripStops;
 };
 
 #endif

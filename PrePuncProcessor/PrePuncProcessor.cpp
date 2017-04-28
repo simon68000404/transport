@@ -34,9 +34,9 @@ using namespace std;
 PrePuncProcessor::PrePuncProcessor() {
     m_iServiceDateCol = 1;
     m_iTripNameCol = 3;
-    m_iDestStationCol = 8;
     m_iServiceTypeCol = 4;
     m_iServiceLineCol = 5;
+    m_iDestStationCol = 8;
 
     m_iPlannedStopNodeCol = 14;
     m_iPlannedStopStationCol = 15;
@@ -138,6 +138,135 @@ std::vector<std::string> PrePuncProcessor::getTripNames() {
     }    
 
     return vecAllTripNames;
+}
+
+// 01/09/2016 -> 2016-09-01
+string changeDateFormat(string strServiceDate) {
+    string strDay;
+    string strMonth;
+    string strYear;
+    
+    stringstream ssServiceDate(strServiceDate);
+    getline(ssServiceDate, strDay, '/');
+    getline(ssServiceDate, strMonth, '/');
+    getline(ssServiceDate, strYear);
+
+    return strYear + '-' + strMonth + '-' + strDay;
+}
+
+// 01/09/2016 12:34:56 -> 2016-09-01 12:34:56 
+string changeDateTimeFormat(string strDateTime) {
+    string strDay;
+    string strMonth;
+    string strYear;
+
+    string strRest;
+    string strRet = "";
+
+    if (strDateTime != "") {
+        stringstream ssDateTime(strDateTime);
+        getline(ssDateTime, strDay, '/');
+        getline(ssDateTime, strMonth, '/');
+        getline(ssDateTime, strYear, ' ');
+        getline(ssDateTime, strRest);
+        strRet = strYear + '-' + strMonth + '-' + strDay + " " + strRest;
+    }
+
+    return strRet;
+}
+
+void PrePuncProcessor::extractTripStops() {
+    ifstream infile;
+    for (int i = 0; i < m_strInfileNames.size(); i++) {
+        infile.open(m_strInfileNames[i].c_str());
+        if (!infile.is_open()) {
+            cout << "File " << m_strInfileNames[i] << " couldn't be opened." << endl;
+            return;
+        }
+
+        string value;
+        string line;
+
+        int r = 1; // Avoid first row 
+        struct tm tm = {};
+        getline(infile, line);
+        while (getline(infile, line)) {
+            int c = 0;
+            stringstream ss(line);
+
+            string strServiceDate;
+            string strTripName;
+            string strStopStation;
+            string strArrivalTime;
+
+            while(c < m_iServiceDateCol) { // 1
+                getline(ss, value, ',');
+                // cout << c << " " << value << endl;
+                c++;
+            }
+            getline(ss, value, ',');
+            // cout << c << " " << value << endl;
+            strServiceDate = value.substr(1, value.length() - 2);
+            strServiceDate = changeDateFormat(strServiceDate);
+            c++;
+
+            while(c < m_iTripNameCol) { // 3
+                getline(ss, value, ',');
+                // cout << c << " " << value << endl;
+                c++;
+            }
+            getline(ss, value, ',');
+            // cout << c << " " << value << endl;
+            strTripName = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iActStopStationCol) { // 19
+                getline(ss, value, ',');
+                // cout << c << " " << value << endl;
+                c++;
+            }
+            getline(ss, value, ',');
+            // cout << c << " " << value << endl;
+            strStopStation = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iActArrvTimeCol) { // 19
+                getline(ss, value, ',');
+                // cout << c << " " << value << endl;
+                c++;
+            }
+            getline(ss, value, ',');
+            // cout << c << " " << value << endl;
+            strArrivalTime = value.substr(1, value.length() - 2);
+            strArrivalTime = changeDateTimeFormat(strArrivalTime);
+            c++;
+            
+            while (getline(ss, value, ',')) {
+                // cout << r << " " << c << " " << value << endl;
+                c++;
+            }
+
+            updateTripStops(strServiceDate, strTripName, strStopStation, strArrivalTime);
+
+            r++;
+        }
+
+        infile.close();
+    }
+}
+
+void PrePuncProcessor::updateTripStops(std::string strServiceDate, std::string strTripName, std::string strStationName, std::string strArrivalTime) {
+    TrainTripStop tripStop;
+    tripStop.strServiceDate;
+    tripStop.strTripID;
+    tripStop.strStationName;
+    tripStop.strDateTime;
+
+    m_vecAllTripStops.push_back(tripStop);
+}
+
+std::vector<TrainTripStop> & PrePuncProcessor::getTripStops() {
+    return m_vecAllTripStops;
 }
 
 void PrePuncProcessor::calculateExceptions() {

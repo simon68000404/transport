@@ -6,6 +6,8 @@
 #include <string>
 #include <map>
 
+class TrainTripStop;
+
 class PerStopDataAnalyser: public PerPersonTripDataAnalyser {
 public:
 	std::map<std::string, std::vector<unsigned int> > getTripNameRows();
@@ -24,6 +26,8 @@ protected:
 	char m_cDivider;
 
 	std::map<std::string, std::vector<unsigned int> > m_mapTripNameRows;
+
+	std::map<TrainTripStop, std::vector<unsigned int> > m_mapTripStopRows;
 };
 
 class RoamPerStopResultAnalyser: public PerStopDataAnalyser {

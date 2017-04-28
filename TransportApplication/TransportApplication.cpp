@@ -387,7 +387,6 @@ void TransportApplication::compareOpalAndRoamPerLinePerDay(std::vector<std::stri
     exportCountComparisonWithGEH(strOutputCSVName, mapOpalPerLineCount, mapRoamPerLineCount, "Line,Opal,Roam per person,GEH,GEH<5,Inaccuracy");
 }
 
-
 void exportPerPersonExceptions(string strOutputCSVBaseName, string strOutputCSVNameModifier, vector<int> vecCount, int totalRows, string strTitle) {
     ofstream outfile;
 
@@ -645,6 +644,23 @@ void TransportApplication::comparerRoamPPAndRoamPSPerStationPerDay(std::vector<s
     exportCountComparison(strOffOutputCSVName, mapOffRoamCount, mapOffRoamPerStopCount, "Per Person Roam,Count,Per Stop Roam,Count");
 }
 
+void TransportApplication::comparerCvmPPAndCvmPSPerStationPerDay(std::vector<std::string> strCvmPersonInputCSVNames, std::vector<std::string> strCvmStopInputCSVNames, std::string strOnOutputCSVName, std::string strOffOutputCSVName) {
+    CvmResultAnalyser cvm;
+    cvm.setFiles(strCvmPersonInputCSVNames);
+    cvm.calculatePerStationCountWithTransfers();
+    map<string, unsigned int> mapOnCvmCount = sumUpVecRowToUIntCount(cvm.getOnPerStationCount());
+    map<string, unsigned int> mapOffCvmCount = sumUpVecRowToUIntCount(cvm.getOffPerStationCount());
+
+    CvmPerStopResultAnalyser cvmPerStop;
+    cvmPerStop.setFiles(strCvmStopInputCSVNames);
+    cvmPerStop.calculatePerStationCount();
+    map<string, unsigned int> mapOnCvmPerStopCount = sumUpVecCountToUIntCount(cvmPerStop.getOnPerStationCount());
+    map<string, unsigned int> mapOffCvmPerStopCount = sumUpVecCountToUIntCount(cvmPerStop.getOffPerStationCount());
+
+    exportCountComparison(strOnOutputCSVName, mapOnCvmCount, mapOnCvmPerStopCount, "Per Person cvm,Count,Per Stop cvm,Count");
+    exportCountComparison(strOffOutputCSVName, mapOffCvmCount, mapOffCvmPerStopCount, "Per Person cvm,Count,Per Stop cvm,Count");
+}
+
 /* Actually opal and cvm are not comparable to each other since cvm per stop data contains transfer the deducted stations, while opal is just raw tap on/off without transfer.
  * Haven't tried to really run this, will wait for discussion.
  * As discussed, compare cvm with roam per stop.
@@ -742,6 +758,80 @@ void exportCompleteness(vector<string> vecAllTripNames, map<string, map<string, 
     outfile.close();
 }
 
+void exportCompleteness(vector<TrainTripStop> vecAllTripStopNames, map<string, map<string, unsigned int> > &mapTripStopsFromPathFindingMethods, string strOutputCSVName) {
+    // unsigned int nMapRoamCoverageCount = 0;
+    // unsigned int nMapCvmCoverageCount = 0;
+
+    // ofstream outfile;
+
+    // outfile.open(strOutputCSVName);
+    // if (!outfile) {
+    //   cerr << "Can't write to output file " << strOutputCSVName << endl;
+    //   exit(1);
+    // }
+    // outfile << "All trip names in Punctuality,Roam,Cvm" << endl;
+
+    // map<string, map<string, unsigned int> >::iterator itRoam = mapTripNamesFromPathFindingMethods.find("Roam");
+    // map<string, map<string, unsigned int> >::iterator itCvm = mapTripNamesFromPathFindingMethods.find("Cvm");
+
+    // map<string, unsigned int> mapRoam;
+    // map<string, unsigned int> mapCvm;
+
+    // if (itRoam != mapTripStopsFromPathFindingMethods.end()) {
+    //     mapRoam = itRoam->second;
+    // }
+
+    // if (itCvm != mapTripStopsFromPathFindingMethods.end()) {
+    //     mapCvm = itCvm->second;
+    // }
+
+    // for (int i = 0; i < vecAllTripNames.size(); i++) {
+    //     outfile << vecAllTripNames[i];
+
+    //     map<string, unsigned int>::iterator itMapRoam;
+    //     map<string, unsigned int>::iterator itMapCvm;
+
+    //     if (mapRoam.size() > 0) {
+    //         itMapRoam = mapRoam.find(vecAllTripNames[i]);
+
+    //         if (itMapRoam != mapRoam.end()) {
+    //             outfile << "," << itMapRoam->second;
+    //             nMapRoamCoverageCount++;
+    //         }
+    //         else {
+    //             outfile << ",0";
+    //         }
+    //     }
+
+    //     if (mapCvm.size() > 0) {
+    //         itMapCvm = mapCvm.find(vecAllTripNames[i]);
+
+    //         cout << vecAllTripNames[i] << endl;
+
+    //         if (itMapCvm != mapCvm.end()) {
+    //             outfile << "," << itMapCvm->second;
+    //             nMapCvmCoverageCount++;
+    //             if (vecAllTripNames[i] == "10-A") {
+    //                 cout << "cvm" + vecAllTripNames[i] << " " << nMapCvmCoverageCount << endl;
+    //             }
+    //         }
+    //         else {
+    //             outfile << ",0";
+    //             if (vecAllTripNames[i] == "10-A") {
+    //                 cout << "cvm" + vecAllTripNames[i] << endl;
+    //             }
+    //         }
+    //     }
+
+    //     outfile << endl;
+    // }
+
+    // outfile << "Total," << nMapRoamCoverageCount << "," << nMapCvmCoverageCount << endl;
+    // outfile << "Completeness Rate," << float(nMapRoamCoverageCount)/float(vecAllTripNames.size()) << "," << float(nMapCvmCoverageCount)/float(vecAllTripNames.size()) << endl;
+
+    // outfile.close();
+}
+
 void TransportApplication::checkCompleteness(std::vector<std::string> strPuncInputCSVNames, std::map<std::string, std::vector<std::string> > mapPerStopInputCSVNames, std::string strOutputCSVName) {
     PrePuncProcessor punc;
     punc.setFiles(strPuncInputCSVNames);
@@ -784,6 +874,126 @@ void TransportApplication::checkCompleteness(std::vector<std::string> strPuncInp
         mapTripNamesFromPathFindingMethods.insert(pair<string, map<string, unsigned int> >("Cvm", mapCvmTripNames));
     }
 
-
     exportCompleteness(vecAllTripNames, mapTripNamesFromPathFindingMethods, strOutputCSVName);
+}
+
+void TransportApplication::checkCompleteness2(std::vector<std::string> strPuncInputCSVNames, std::map<std::string, std::vector<std::string> > mapPerStopInputCSVNames, std::string strOutputCSVName) {
+    // PrePuncProcessor punc;
+    // punc.setFiles(strPuncInputCSVNames);
+    // punc.extractTripStops();
+    // vector<TrainTripStop> vecAllTripStops = punc.getTripStops();
+
+    // map<string, vector<string> >::iterator it;
+    // vector<string> vecRoamInputFiles;
+    // vector<string> vecCvmInputFiles;
+    
+    // it = mapPerStopInputCSVNames.find("Roam");
+    // if (it != mapPerStopInputCSVNames.end()) {
+    //     vecRoamInputFiles = it->second;
+    // }
+
+    // it = mapPerStopInputCSVNames.find("Cvm");
+    // if (it != mapPerStopInputCSVNames.end()) {
+    //     vecCvmInputFiles = it->second;
+    // }
+
+    // map<TrainTripStop, unsigned int> mapRoamTripStopRows;
+    // map<TrainTripStop, unsigned int> mapCvmTripStopRows;
+    // map<string, map<TrainTripStop, unsigned int> > mapTripStopNamesFromPathFindingMethods;
+
+    // if (vecRoamInputFiles.size() > 0) {
+    //     RoamPerStopResultAnalyser roam;
+    //     roam.setFiles(vecRoamInputFiles);
+    //     roam.extractTripStopRows();
+    //     mapRoamTripStopRows = sumUpVecRowToUIntCount(roam.getTripStopRows());
+        
+    //     mapTripStopNamesFromPathFindingMethods.insert(pair<string, map<TrainTripStop, unsigned int> >("Roam", mapRoamTripStopRows));
+    // }
+
+    // if (vecCvmInputFiles.size() > 0) {
+    //     CvmPerStopResultAnalyser cvm;
+    //     cvm.setFiles(vecCvmInputFiles);
+    //     cvm.extractTripStopRows();
+    //     mapCvmTripStopRows = sumUpVecRowToUIntCount(cvm.getTripStopRows());
+
+    //     mapTripStopNamesFromPathFindingMethods.insert(pair<string, map<TrainTripStop, unsigned int> >("Cvm", mapCvmTripStopRows));
+    // }
+
+    // exportCompleteness(vecAllTripStops, mapTripStopNamesFromPathFindingMethods, strOutputCSVName);
+}
+
+void TransportApplication::compareOpalAndCvmPerStationPerDay(std::vector<std::string> strOpalInputCSVNames, std::vector<std::string> strCvmInputCSVNames, std::string strOnOutputCSVName, std::string strOffOutputCSVName) {
+    int nOpalCSVCount = strOpalInputCSVNames.size();
+    int nCvmCSVCount = strCvmInputCSVNames.size();
+
+    if (nOpalCSVCount != nCvmCSVCount) {
+        cout << "The csv name arrays given are not consistent: " << endl;
+        cout << "nOpalCSVCount: " << nOpalCSVCount << " nCvmCSVCount: " << nCvmCSVCount << endl;
+        return;
+    }
+
+    OpalTripAnalyser opal;
+    opal.setFiles(strOpalInputCSVNames); 
+    opal.calculatePerStationCount();
+    map<string, unsigned int> mapOnOpalPerStationCount = sumUpVecRowToUIntCount(opal.getOnPerStationCount());
+    map<string, unsigned int> mapOffOpalPerStationCount = sumUpVecRowToUIntCount(opal.getOffPerStationCount());
+
+    CvmResultAnalyser cvm;
+    cvm.setFiles(strCvmInputCSVNames);
+    cvm.calculatePerStationCount();
+    map<string, unsigned int> mapOnCvmPerStationCount = sumUpVecRowToUIntCount(cvm.getOnPerStationCount());
+    map<string, unsigned int> mapOffCvmPerStationCount = sumUpVecRowToUIntCount(cvm.getOffPerStationCount());
+
+    cout << "cvm: " << mapOnOpalPerStationCount.size() << " " << mapOffCvmPerStationCount.size() << endl;
+
+    exportCountComparisonWithGEH(strOnOutputCSVName, mapOnOpalPerStationCount, mapOnCvmPerStationCount, "Station,Opal,Cvm per person,GEH,GEH<5,Inaccuracy");
+    exportCountComparisonWithGEH(strOffOutputCSVName, mapOffOpalPerStationCount, mapOffCvmPerStationCount, "Station,Opal,Cvm per person,GEH,GEH<5,Inaccuracy");
+}
+void TransportApplication::compareOpalAndCvmPerLinePerDay(std::vector<std::string> strOpalInputCSVNames, std::vector<std::string> strCvmInputCSVNames, std::string strOutputCSVName, std::map<std::string, std::vector<std::string> > mapStationLines) {
+    int nOpalCSVCount = strOpalInputCSVNames.size();
+    int nCvmCSVCount = strCvmInputCSVNames.size();
+    if (nOpalCSVCount != nCvmCSVCount) {
+        cout << "The csv name arrays given are not consistent: " << endl;
+        cout << "nOpalCSVCount: " << nOpalCSVCount << " nCvmCSVCount: " << nCvmCSVCount << endl;
+        return;
+    }
+
+    OpalTripAnalyser opal;
+    opal.setFiles(strOpalInputCSVNames);
+    opal.setStationLines(mapStationLines);
+
+    opal.calculatePerLineCount();
+
+    map<string, unsigned int> mapOpalPerLineCount = sumUpVecRowToUIntCount(opal.getPerLineCount());
+
+    CvmResultAnalyser cvm;
+    cvm.setFiles(strCvmInputCSVNames);
+    cvm.setStationLines(mapStationLines);
+    cvm.calculatePerLineCount();
+    map<string, unsigned int> mapCvmPerLineCount = sumUpVecRowToUIntCount(cvm.getPerLineCount());
+
+    // exportCountComparison(strOutputCSVName, mapOpalPerLineCount, mapRoamPerLineCount, "Opal,Count,Roam,Count");
+    exportCountComparisonWithGEH(strOutputCSVName, mapOpalPerLineCount, mapCvmPerLineCount, "Line,Opal,Cvm per person,GEH,GEH<5,Inaccuracy");
+}
+void TransportApplication::compareOpalAndCvmPerODPerDay(std::vector<std::string> strOpalInputCSVNames, std::vector<std::string> strCvmInputCSVNames, std::string strOutputCSVName) {
+    int nOpalCSVCount = strOpalInputCSVNames.size();
+    int nCvmCSVCount = strCvmInputCSVNames.size();
+    if (nOpalCSVCount != nCvmCSVCount) {
+        cout << "The csv name arrays given are not consistent: " << endl;
+        cout << "nOpalCSVCount: " << nOpalCSVCount << " nCvmCSVCount: " << nCvmCSVCount << endl;
+        return;
+    }
+
+    OpalTripAnalyser opal;
+    opal.setFiles(strOpalInputCSVNames);
+    opal.calculatePerODCount();
+    map<string, unsigned int> mapOpalPerODCount = sumUpVecRowToUIntCount(opal.getPerODCount());
+
+    CvmResultAnalyser cvm;
+    cvm.setFiles(strCvmInputCSVNames);
+    cvm.calculatePerODCount();
+    map<string, unsigned int> mapCvmPerODCount = sumUpVecRowToUIntCount(cvm.getPerODCount());
+
+    exportCountComparisonWithGEH(strOutputCSVName, mapOpalPerODCount, mapCvmPerODCount, "OD pair,Opal,Cvm per person,GEH,GEH<5,Inaccuracy");
+
 }

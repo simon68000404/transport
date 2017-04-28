@@ -28,6 +28,7 @@ public:
 	bool setFiles(std::vector<std::string> strFileNames);
 	void setStationLines(std::map<std::string, std::vector<std::string> > mapStationLines);
 	void calculatePerStationCount();
+	void calculatePerStationCountWithTransfers();
 	void calculatePerODCount();
 	void calculatePerLineCount();
 	void calculateExceptions();
@@ -54,6 +55,8 @@ protected:
 	int m_nTotalRows;
 	
 	std::vector<std::string> m_vecStationsToSkip;
+
+	char m_cDivider;
 
 	// std::map<std::string, std::vector<int> > m_mapExceptions;
 };
@@ -116,6 +119,25 @@ private:
 	std::vector<int> m_vecMT2TripsCount;
 
 	// std::string m_strExceptionNotAbleToFindPath;
+};
+
+class CvmResultAnalyser: public PerPersonTripDataAnalyser {
+public:
+	CvmResultAnalyser();
+	void calculatePerStationCount();
+	void calculatePerStationCountWithTransfers();
+	void calculatePerODCount();
+	void calculatePerLineCount();
+
+private:
+	int m_iRunIdCol;
+	int m_iSubTripIndex;
+	int m_iOrigStopStationCol;
+	int m_iDestStopStationCol;
+	int m_iBoardingStopStationCol;
+	int m_iAlightingStopStationCol;
+	int m_iPassengerBehaviourCol;
+	int m_iPassengerTripIdCol;
 };
 
 #endif

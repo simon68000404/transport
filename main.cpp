@@ -6,17 +6,26 @@
 #include <string>
 using namespace std;
 
-#define _201608 1
-#define _201609 0
+#define _201608 0
+#define _201609 1
 
 #define OPAL_VS_ROAM_PER_STATION_PER_MONTH 0
-#define OPAL_VS_ROAM_PER_STATION_PER_DAY 1
+#define OPAL_VS_ROAM_PER_STATION_PER_DAY 0
 
 #define OPAL_VS_ROAM_PER_OD_PER_MONTH 0
-#define OPAL_VS_ROAM_PER_OD_PER_DAY 1
+#define OPAL_VS_ROAM_PER_OD_PER_DAY 0
 
 #define OPAL_VS_ROAM_PER_LINE_PER_MONTH 0
-#define OPAL_VS_ROAM_PER_LINE_PER_DAY 1
+#define OPAL_VS_ROAM_PER_LINE_PER_DAY 0
+
+#define OPAL_VS_CVM_PER_STATION_PER_MONTH 0
+#define OPAL_VS_CVM_PER_STATION_PER_DAY 1
+
+#define OPAL_VS_CVM_PER_OD_PER_MONTH 0
+#define OPAL_VS_CVM_PER_OD_PER_DAY 1
+
+#define OPAL_VS_CVM_PER_LINE_PER_MONTH 0
+#define OPAL_VS_CVM_PER_LINE_PER_DAY 1
 
 #define CVM_VS_ROAM_PER_STATION_PER_MONTH 0
 
@@ -31,6 +40,8 @@ using namespace std;
 #define PUNC_EXCEPTION_PER_MONTH 0
 
 #define ROAM_PERSON_VS_STOP_PER_STATION 0
+
+#define CVM_PERSON_VS_STOP_PER_STATION 0
 
 #define COMPLETENESS_CHECK 0
 
@@ -71,6 +82,39 @@ int main(int argc, char* argv[]) {
         "JS_ALL_V.20160829_20160916.csvp",
         "JS_ALL_V.20160830_20160914.csvp",
         "JS_ALL_V.20160831_20160915.csvp",
+    };
+
+    string opalFileNames201609[] = {
+        "JS_ALL_V.20160901_20160916.csvp",
+        "JS_ALL_V.20160902_20160917.csvp",
+        "JS_ALL_V.20160903_20160918.csvp",
+        "JS_ALL_V.20160904_20160919.csvp",
+        "JS_ALL_V.20160905_20160920.csvp",
+        "JS_ALL_V.20160906_20160921.csvp",
+        "JS_ALL_V.20160907_20160922.csvp",
+        "JS_ALL_V.20160908_20160923.csvp",
+        "JS_ALL_V.20160909_20160924.csvp",
+        "JS_ALL_V.20160910_20160925.csvp",
+        "JS_ALL_V.20160911_20160926.csvp",
+        "JS_ALL_V.20160912_20160927.csvp",
+        "JS_ALL_V.20160913_20160928.csvp",
+        "JS_ALL_V.20160914_20160929.csvp",
+        "JS_ALL_V.20160915_20160930.csvp",
+        "JS_ALL_V.20160916_20161001.csvp",
+        "JS_ALL_V.20160917_20161002.csvp",
+        "JS_ALL_V.20160918_20161003.csvp",
+        "JS_ALL_V.20160919_20161004.csvp",
+        "JS_ALL_V.20160920_20161005.csvp",
+        "JS_ALL_V.20160921_20161006.csvp",
+        "JS_ALL_V.20160922_20161007.csvp",
+        "JS_ALL_V.20160923_20161008.csvp",
+        "JS_ALL_V.20160924_20161009.csvp",
+        "JS_ALL_V.20160925_20161010.csvp",
+        "JS_ALL_V.20160926_20161011.csvp",
+        "JS_ALL_V.20160927_20161012.csvp",
+        "JS_ALL_V.20160928_20161013.csvp",
+        "JS_ALL_V.20160929_20161014.csvp",
+        "JS_ALL_V.20160930_20161015.csvp",
     };
 
     string roamFileNames[] = {
@@ -207,13 +251,57 @@ int main(int argc, char* argv[]) {
         "Final OUTPUT TPA-30-09-2016_matched.csv",
     };
 
+    string cvmFileNames201609[] = {
+        "20160901_distinct.csv",
+        "20160902_distinct.csv",
+        "20160903_distinct.csv",
+        "20160904_distinct.csv",
+        "20160905_distinct.csv",
+        "20160906_distinct.csv",
+        "20160907_distinct.csv",
+        "20160908_distinct.csv",
+        "20160909_distinct.csv",
+        "20160910_distinct.csv",
+        "20160911_distinct.csv",
+        "20160912_distinct.csv",
+        "20160913_distinct.csv",
+        "20160914_distinct.csv",
+        "20160915_distinct.csv",
+        "20160916_distinct.csv",
+        "20160917_distinct.csv",
+        "20160918_distinct.csv",
+        "20160919_distinct.csv",
+        "20160920_distinct.csv",
+        "20160921_distinct.csv",
+        "20160922_distinct.csv",
+        "20160923_distinct.csv",
+        "20160924_distinct.csv",
+        "20160925_distinct.csv",
+        "20160926_distinct.csv",
+        "20160927_distinct.csv",
+        "20160928_distinct.csv",
+        "20160929_distinct.csv",
+        "20160930_distinct.csv",
+    };
+
     vector<string> strOpalNames;
+    vector<string> strOpalNames201609;
     vector<string> strRoamNames;
     vector<string> strRoamNames201609;
-    vector<string> strDayOnOutputNames;
-    vector<string> strDayOffOutputNames;
-    vector<string> strDayODOutputNames;
-    vector<string> strDayLineOutputNames;
+    vector<string> strCvmNames201609;
+    vector<string> strRoamOpalDayOnOutputNames;
+    vector<string> strRoamOpalDayOffOutputNames;
+    vector<string> strRoamOpalDayOnOutputNames201609;
+    vector<string> strRoamOpalDayOffOutputNames201609;
+    vector<string> strCvmOpalDayOnOutputNames201609;
+    vector<string> strCvmOpalDayOffOutputNames201609;
+    vector<string> strRoamOpalDayODOutputNames;
+    vector<string> strRoamOpalDayLineOutputNames;
+    vector<string> strRoamOpalDayLineOutputNames201609;
+    vector<string> strCvmOpalDayLineOutputNames201609;
+    vector<string> strRoamOpalDayODOutputNames201609;
+    vector<string> strCvmOpalDayODOutputNames201609;
+
     vector<string> strOpalExceptionBaseNames;
     vector<string> strRoamExceptionBaseNames;
 
@@ -228,8 +316,22 @@ int main(int argc, char* argv[]) {
     string strMergedODOutputName = "./Results/201608/Per OD Pair/Summary/opal_roam_per_od_08.csv";
     string strMergedLineOutputName = "./Results/201608/Per Line/Summary/opal_roam_per_line_08.csv";
 
+    string strMergedOnOutputName201609 = "./Results/201609/Per Station/Summary/opal_roam_per_station_09_on.csv";
+    string strMergedOffOutputName201609 = "./Results/201609/Per Station/Summary/opal_roam_per_station_09_off.csv";
+    string strMergedODOutputName201609 = "./Results/201609/Per OD Pair/Summary/opal_roam_per_od_09.csv";
+    string strMergedLineOutputName201609 = "./Results/201609/Per Line/Summary/opal_roam_per_line_09.csv";
+
+    string strMergedCvmOpalOnOutputName201609 = "./Results/201609/Per Station/Summary/opal_cvm_per_station_09_on.csv";
+    string strMergedCvmOpalOffOutputName201609 = "./Results/201609/Per Station/Summary/opal_cvm_per_station_09_off.csv";
+    string strMergedCvmOpalODOutputName201609 = "./Results/201609/Per OD Pair/Summary/opal_cvm_per_od_09.csv";
+    string strMergedCvmOpalLineOutputName201609 = "./Results/201609/Per Line/Summary/opal_cvm_per_line_09.csv";
+
+    // self check 
     string strMergedRoamPerStopOnOutputName = "./Results/roam_pp_vs_ps_per_station_08_on.csv";
     string strMergedRoamPerStopOffOutputName = "./Results/roam_pp_vs_ps_per_station_08_off.csv";
+
+    string strMergedCvmPerStopOnOutputName201609 = "./Results/cvm_pp_vs_ps_per_station_09_on.csv";
+    string strMergedCvmPerStopOffOutputName201609 = "./Results/cvm_pp_vs_ps_per_station_09_off.csv";
 
     string strMergedRoamCvmPerStopOnOutputName201609 = "./Results/roam_ps_vs_cvm_ps_per_station_09_on.csv";
     string strMergedRoamCvmPerStopOffOutputName201609 = "./Results/roam_ps_vs_cvm_ps_per_station_09_off.csv";
@@ -240,15 +342,15 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < 31; i++) {
         string strDate = i < 9 ? "0" + to_string(i + 1) : to_string(i + 1);
-        strOpalNames.push_back(strHardDriveBaseName + "Transport/Opal/" + opalFileNames[i]);
+        strOpalNames.push_back(strHardDriveBaseName + "Transport/Opal/201608/" + opalFileNames[i]);
         strRoamNames.push_back(strHardDriveBaseName + "Transport/Roam/Person/" + roamFileNames[i]);
 
-        strDayOnOutputNames.push_back("./Results/201608/Per Station/Daily Reports/opal_roam_per_station_08" + strDate + "_on.csv");
-        strDayOffOutputNames.push_back("./Results/201608/Per Station/Daily Reports/opal_roam_per_station_08" + strDate + "_off.csv");
+        strRoamOpalDayOnOutputNames.push_back("./Results/201608/Per Station/Daily Reports/opal_roam_per_station_08" + strDate + "_on.csv");
+        strRoamOpalDayOffOutputNames.push_back("./Results/201608/Per Station/Daily Reports/opal_roam_per_station_08" + strDate + "_off.csv");
 
-        strDayODOutputNames.push_back("./Results/201608/Per OD Pair/Daily Reports/opal_roam_per_od_08" + strDate + ".csv");
+        strRoamOpalDayODOutputNames.push_back("./Results/201608/Per OD Pair/Daily Reports/opal_roam_per_od_08" + strDate + ".csv");
 
-        strDayLineOutputNames.push_back("./Results/201608/Per Line/Daily Reports/opal_roam_per_line_08" + strDate + ".csv");
+        strRoamOpalDayLineOutputNames.push_back("./Results/201608/Per Line/Daily Reports/opal_roam_per_line_08" + strDate + ".csv");
 
         strOpalExceptionBaseNames.push_back("./Results/201608/Exceptions/Opal/Daily Reports/exception_opal_08" + strDate + "_");
         strRoamExceptionBaseNames.push_back("./Results/201608/Exceptions/Roam/Daily Reports/exception_roam_08" + strDate + "_");
@@ -258,8 +360,25 @@ int main(int argc, char* argv[]) {
         strRoamPerStopDayOffOutputNames.push_back("./Results/roam_pp_vs_ps_per_station_08" + strDate + "_off.csv");
     }
 
+    // strCvmNames201609.push_back("/media/nlp/Elements/Transport/CVM/Person/boardings_awtt_20160901_and_20160902.csv");
+
     for (int i = 0; i < 30; i++) {
+        string strDate = i < 9 ? "0" + to_string(i + 1) : to_string(i + 1);
+        strOpalNames201609.push_back(strHardDriveBaseName + "Transport/Opal/201609/" + opalFileNames201609[i]);
         strRoamNames201609.push_back(strHardDriveBaseName + "Transport/Roam/Person/" + roamFileNames201609[i]);
+        strCvmNames201609.push_back(strHardDriveBaseName + "Transport/CVM/Person/" + cvmFileNames201609[i]);
+
+        strRoamOpalDayOnOutputNames201609.push_back("./Results/201609/Per Station/Daily Reports/opal_roam_per_station_09" + strDate + "_on.csv");
+        strRoamOpalDayOffOutputNames201609.push_back("./Results/201609/Per Station/Daily Reports/opal_roam_per_station_09" + strDate + "_off.csv");
+        strCvmOpalDayOnOutputNames201609.push_back("./Results/201609/Per Station/Daily Reports/opal_cvm_per_station_09" + strDate + "_on.csv");
+        strCvmOpalDayOffOutputNames201609.push_back("./Results/201609/Per Station/Daily Reports/opal_cvm_per_station_09" + strDate + "_off.csv");
+
+        strRoamOpalDayODOutputNames201609.push_back("./Results/201609/Per OD Pair/Daily Reports/opal_roam_per_od_09" + strDate + ".csv");
+        strCvmOpalDayODOutputNames201609.push_back("./Results/201609/Per OD Pair/Daily Reports/opal_cvm_per_od_09" + strDate + ".csv");
+
+        strRoamOpalDayLineOutputNames201609.push_back("./Results/201609/Per Line/Daily Reports/opal_roam_per_line_09" + strDate + ".csv");
+        strCvmOpalDayLineOutputNames201609.push_back("./Results/201609/Per Line/Daily Reports/opal_cvm_per_line_09" + strDate + ".csv");
+        
         strRoamPerStopNames201609.push_back(strHardDriveBaseName + "Transport/Roam/Stop/" + roamPerStopFileNames201609[i]);
     }
 
@@ -286,7 +405,7 @@ int main(int argc, char* argv[]) {
         vector<string> strInputNames2;
         strInputNames2.push_back(strRoamNames[i]);
 
-        TransportApplication::compareOpalAndRoamPerStationPerDay(strInputNames1, strInputNames2, strDayOnOutputNames[i], strDayOffOutputNames[i]);
+        TransportApplication::compareOpalAndRoamPerStationPerDay(strInputNames1, strInputNames2, strRoamOpalDayOnOutputNames[i], strRoamOpalDayOffOutputNames[i]);
     }
 #endif
 
@@ -305,7 +424,7 @@ int main(int argc, char* argv[]) {
         vector<string> strInputNames2;
         strInputNames2.push_back(strRoamNames[i]);
 
-        TransportApplication::compareOpalAndRoamPerODPerDay(strInputNames1, strInputNames2, strDayODOutputNames[i]);
+        TransportApplication::compareOpalAndRoamPerODPerDay(strInputNames1, strInputNames2, strRoamOpalDayODOutputNames[i]);
     }
 #endif
 
@@ -331,7 +450,7 @@ int main(int argc, char* argv[]) {
         vector<string> strInputNames2;
         strInputNames2.push_back(strRoamNames[i]);
 
-        TransportApplication::compareOpalAndRoamPerLinePerDay(strInputNames1, strInputNames2, strDayLineOutputNames[i], mapStationLines);
+        TransportApplication::compareOpalAndRoamPerLinePerDay(strInputNames1, strInputNames2, strRoamOpalDayLineOutputNames[i], mapStationLines);
     }
 #endif
 
@@ -408,6 +527,141 @@ int main(int argc, char* argv[]) {
 #endif
 
 #if _201609
+
+#if OPAL_VS_ROAM_PER_STATION_PER_MONTH
+    // Per station - whole sep into one csv
+    cout << "September Opal vs Roam per station - month" << endl;
+    TransportApplication::compareOpalAndRoamPerStationPerDay(
+        strOpalNames201609, 
+        strRoamNames201609, 
+        strMergedOnOutputName201609, 
+        strMergedOffOutputName201609);
+#endif
+#if OPAL_VS_ROAM_PER_STATION_PER_DAY
+    // Per station - each day of sep into one csv
+    for (int i = 0; i < 30; i++) {
+        cout << "September Opal vs Roam per station - day " << i << endl;
+        vector<string> strInputNames1;
+        strInputNames1.push_back(strOpalNames201609[i]);
+        vector<string> strInputNames2;
+        strInputNames2.push_back(strRoamNames201609[i]);
+
+        TransportApplication::compareOpalAndRoamPerStationPerDay(strInputNames1, strInputNames2, strRoamOpalDayOnOutputNames201609[i], strRoamOpalDayOffOutputNames201609[i]);
+    }
+#endif
+
+#if OPAL_VS_ROAM_PER_OD_PER_MONTH
+    // Per od - whole aug into one csv
+    cout << "September Opal vs Roam per od - month" << endl;
+    TransportApplication::compareOpalAndRoamPerODPerDay(
+        strOpalNames201609, 
+        strRoamNames201609, 
+        strMergedODOutputName201609);
+#endif
+#if OPAL_VS_ROAM_PER_OD_PER_DAY
+    // Per od - each day of aug into one csv
+    for (int i = 0; i < 30; i++) {
+        cout << "September Opal vs Roam per od - day" << i << endl;
+        vector<string> strInputNames1;
+        strInputNames1.push_back(strOpalNames201609[i]);
+        vector<string> strInputNames2;
+        strInputNames2.push_back(strRoamNames201609[i]);
+
+        TransportApplication::compareOpalAndRoamPerODPerDay(strInputNames1, strInputNames2, strRoamOpalDayODOutputNames201609[i]);
+    }
+#endif
+
+// #if EXTRACT_LINE_STATIONS
+//     TransportApplication::generateAllLines(strHardDriveBaseName + "Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv", "all_lines.csv");
+// #endif
+
+#if OPAL_VS_ROAM_PER_LINE_PER_MONTH
+    // map<string, vector<string> > mapStationLines = TransportApplication::importAllStationLines("all_lines.csv");
+    // Per line - whole aug into one csv
+    cout << "September Opal vs Roam per line - month" << endl;
+    TransportApplication::compareOpalAndRoamPerLinePerDay(
+        strOpalNames201609, 
+        strRoamNames201609, 
+        strMergedLineOutputName201609, mapStationLines);
+#endif
+#if OPAL_VS_ROAM_PER_LINE_PER_DAY
+    // Per line - each day of aug into one csv
+
+    // map<string, vector<string> > mapStationLines = TransportApplication::importAllStationLines("all_lines.csv");
+    for (int i = 0; i < 30; i++) {
+        cout << "September Opal vs Roam per line - day" << i << endl;
+        vector<string> strInputNames1;
+        strInputNames1.push_back(strOpalNames201609[i]);
+        vector<string> strInputNames2;
+        strInputNames2.push_back(strRoamNames201609[i]);
+
+        TransportApplication::compareOpalAndRoamPerLinePerDay(strInputNames1, strInputNames2, strRoamOpalDayLineOutputNames201609[i], mapStationLines);
+    }
+#endif
+
+#if OPAL_VS_CVM_PER_STATION_PER_MONTH
+    // Per station - whole sep into one csv
+    cout << "September Opal vs CVM per station - month" << endl;
+    TransportApplication::compareOpalAndRoamPerStationPerDay(
+        strOpalNames201609, 
+        strCvmNames201609, 
+        strMergedOnOutputName201609, 
+        strMergedOffOutputName201609);
+#endif
+#if OPAL_VS_CVM_PER_STATION_PER_DAY
+    // Per station - each day of sep into one csv
+    for (int i = 0; i < 30; i++) {
+        cout << "September Opal vs CVM per station - day " << i << endl;
+        vector<string> strInputNames1;
+        strInputNames1.push_back(strOpalNames201609[i]);
+        vector<string> strInputNames2;
+        strInputNames2.push_back(strCvmNames201609[i]);
+
+        TransportApplication::compareOpalAndCvmPerStationPerDay(strInputNames1, strInputNames2, strCvmOpalDayOnOutputNames201609[i], strCvmOpalDayOffOutputNames201609[i]);
+    }
+#endif
+#if OPAL_VS_CVM_PER_OD_PER_MONTH
+    // Per od - whole aug into one csv
+    // cout << "September Opal vs Roam per od - month" << endl;
+    // TransportApplication::compareOpalAndRoamPerODPerDay(
+    //     strOpalNames201609, 
+    //     strRoamNames201609, 
+    //     strMergedODOutputName201609);
+#endif
+#if OPAL_VS_CVM_PER_OD_PER_DAY
+    // Per od - each day of aug into one csv
+    for (int i = 0; i < 30; i++) {
+        cout << "September Opal vs CVM per od - day" << i << endl;
+        vector<string> strInputNames1;
+        strInputNames1.push_back(strOpalNames201609[i]);
+        vector<string> strInputNames2;
+        strInputNames2.push_back(strCvmNames201609[i]);
+
+        TransportApplication::compareOpalAndCvmPerODPerDay(strInputNames1, strInputNames2, strCvmOpalDayODOutputNames201609[i]);
+    }
+#endif
+
+#if OPAL_VS_CVM_PER_LINE_PER_MONTH
+    // map<string, vector<string> > mapStationLines = TransportApplication::importAllStationLines("all_lines.csv");
+    // Per line - whole aug into one csv
+    // TransportApplication::compareOpalAndRoamPerLinePerDay(
+    //     strOpalNames, 
+    //     strRoamNames, 
+    //     strMergedLineOutputName, mapStationLines);
+#endif
+#if OPAL_VS_CVM_PER_LINE_PER_DAY
+    // Per line - each day of aug into one csv
+
+    for (int i = 0; i < 30; i++) {
+        vector<string> strInputNames1;
+        strInputNames1.push_back(strOpalNames201609[i]);
+        vector<string> strInputNames2;
+        strInputNames2.push_back(strCvmNames201609[i]);
+
+        TransportApplication::compareOpalAndCvmPerLinePerDay(strInputNames1, strInputNames2, strCvmOpalDayLineOutputNames201609[i], mapStationLines);
+    }
+#endif
+
 #if CVM_VS_ROAM_PER_STATION_PER_MONTH
     TransportApplication::compareRoamAndCvmPerStationFromPerStopData(
         strRoamPerStopNames201609,  
@@ -424,6 +678,14 @@ int main(int argc, char* argv[]) {
     mapPerStopInputCSVNames.insert(pair<string, vector<string> >("Cvm", strCvmPerStopNames201609));
     TransportApplication::checkCompleteness(strPuncInputCSVNames, mapPerStopInputCSVNames, 
         "./Results/201609/Completeness Check/completeness_check.csv");
+#endif
+
+#if CVM_PERSON_VS_STOP_PER_STATION
+    TransportApplication::comparerCvmPPAndCvmPSPerStationPerDay(
+        strCvmNames201609, 
+        strCvmPerStopNames201609, 
+        strMergedCvmPerStopOnOutputName201609, 
+        strMergedCvmPerStopOffOutputName201609);
 #endif
 #endif
 }
