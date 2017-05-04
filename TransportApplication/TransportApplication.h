@@ -17,6 +17,7 @@ public:
 	static void compareOpalAndCvmPerODPerDay(std::vector<std::string> strOpalInputCSVNames, std::vector<std::string> strCvmInputCSVNames, std::string strOutputCSVName);
 
 	static void compareRoamAndCvmPerStationFromPerStopData(std::vector<std::string> strOpalInputCSVNames, std::vector<std::string> strRoamInputCSVNames, std::string strOnOutputCSVName, std::string strOffOutputCSVName);
+	static void compareRoamAndCvmInterchangesPerDay(std::vector<std::string> strRoamInputCSVNames, std::vector<std::string> strCvmInputCSVNames, std::string strOutputCSVName);
 
 	static void checkCompleteness(std::vector<std::string> strPuncInputCSVNames, std::map<std::string, std::vector<std::string> > mapPerStopInputCSVNames, std::string strOutputCSVName);
 	static void checkCompleteness2(std::vector<std::string> strPuncInputCSVNames, std::map<std::string, std::vector<std::string> > mapPerStopInputCSVNames, std::string strOutputCSVName);

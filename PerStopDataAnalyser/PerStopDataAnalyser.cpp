@@ -50,6 +50,10 @@ std::map<std::string, std::vector<unsigned int> > PerStopDataAnalyser::getTripNa
     return m_mapTripNameRows;
 }
 
+std::vector<TrainTripStop> PerStopDataAnalyser::getTripStops() {
+    return m_vecTripStops;
+}
+
 RoamPerStopResultAnalyser::RoamPerStopResultAnalyser() {
 	m_iThisStationCol = 0;
 	m_iUnboardingCountCol = 27;
@@ -57,6 +61,8 @@ RoamPerStopResultAnalyser::RoamPerStopResultAnalyser() {
 
     m_iServiceDateCol = 2;
     m_iTripNameCol = 8;
+
+    m_iArrivalTime = 3;
 
     m_cDivider = ',';
 }
@@ -88,13 +94,12 @@ void RoamPerStopResultAnalyser::calculatePerStationCount() {
 
             while(c < m_iThisStationCol) {
                 getline(ss, value, m_cDivider);
-                // cout << c << " " << value << endl;
+
                 c++;
             }
 
             // this stop station
             getline(ss, value, m_cDivider);
-            // cout << c << " " << value << endl;
             strThisStopStation = value.substr(1, value.length() - 2);;
             c++;
 
@@ -109,13 +114,12 @@ void RoamPerStopResultAnalyser::calculatePerStationCount() {
 
             // unboard count
             getline(ss, value, m_cDivider);
-            // cout << c << " " << value << endl;
             nUnboardingCount = atoi(value.c_str());
             c++;
 
             while(c < m_iBoardingCountCol) {
             	getline(ss, value, m_cDivider);
-                // cout << c << " " << value << endl;
+
             	c++;
             }
 
@@ -128,7 +132,6 @@ void RoamPerStopResultAnalyser::calculatePerStationCount() {
             c++;
             
             while (getline(ss, value, m_cDivider)) {
-                // cout << r << " " << c << " " << value << endl;
                 c++;
             }
 
@@ -174,24 +177,21 @@ void RoamPerStopResultAnalyser::extractTripNameRows() {
 
             // Service Date in 2016-08-01
             getline(ss, value, m_cDivider);
-            // cout << c << " " << value << endl;
             strServiceDate = value.substr(1, value.length() - 2);
             c++;
 
             while(c < m_iTripNameCol) {
                 getline(ss, value, m_cDivider);
-                // cout << c << " " << value << endl;
+
                 c++;
             }
 
             // Trip Name
             getline(ss, value, m_cDivider);
-            // cout << c << " " << value << endl;
             strTripName = value.substr(1, value.length() - 2); // to remove the postfix "-JOINED"
             c++;
             
             while (getline(ss, value, m_cDivider)) {
-                // cout << r << " " << c << " " << value << endl;
                 c++;
             }
 
@@ -218,7 +218,9 @@ CvmPerStopResultAnalyser::CvmPerStopResultAnalyser() {
     m_iServiceDateCol = 4;
     m_iTripNameCol = 1;
 
-    m_cDivider = ';';
+    m_iArrivalTime = 5;
+
+    m_cDivider = ',';
 }
 
 void CvmPerStopResultAnalyser::calculatePerStationCount() {
@@ -248,13 +250,11 @@ void CvmPerStopResultAnalyser::calculatePerStationCount() {
 
             while(c < m_iThisStationCol) {
                 getline(ss, value, m_cDivider);
-                // cout << c << " " << value << endl;
+
                 c++;
             }
-
             // this stop station
             getline(ss, value, m_cDivider);
-            // cout << c << " " << value << endl;
             strThisStopStation = value.substr(1, value.length() - 2);;
             c++;
 
@@ -262,16 +262,14 @@ void CvmPerStopResultAnalyser::calculatePerStationCount() {
                 getline(ss, value, m_cDivider);
                 c++;
             }    
-
             // unboard count
             getline(ss, value, m_cDivider);
-            // cout << c << " " << value << endl;
             nUnboardingCount = atoi(value.c_str());
             c++;
 
             while(c < m_iBoardingCountCol) {
                 getline(ss, value, m_cDivider);
-                // cout << c << " " << value << endl;
+
                 c++;
             }
 
@@ -281,7 +279,6 @@ void CvmPerStopResultAnalyser::calculatePerStationCount() {
             c++;
             
             while (getline(ss, value, m_cDivider)) {
-                // cout << r << " " << c << " " << value << endl;
                 c++;
             }
 
@@ -326,13 +323,12 @@ void CvmPerStopResultAnalyser::extractTripNameRows() {
 
             while(c < m_iTripNameCol) {
                 getline(ss, value, m_cDivider);
-                // cout << c << " " << value << endl;
+
                 c++;
             }
 
             // Trip Name
             getline(ss, value, m_cDivider);
-            // cout << c << " " << value << endl;
             strTripName = value.substr(1, value.length() - 2);
             c++;
 
@@ -343,12 +339,10 @@ void CvmPerStopResultAnalyser::extractTripNameRows() {
 
             // Service Date in 2016-08-01
             getline(ss, value, m_cDivider);
-            // cout << c << " " << value << endl;
             strServiceDate = value.substr(1, value.length() - 2);
             c++;
             
             while (getline(ss, value, m_cDivider)) {
-                // cout << r << " " << c << " " << value << endl;
                 c++;
             }
 
@@ -364,4 +358,213 @@ void CvmPerStopResultAnalyser::extractTripNameRows() {
 }
 void CvmPerStopResultAnalyser::calculatePerLineCount() {
 
+}
+
+void PerStopDataAnalyser::updateTripStops(TrainTripStop tripStop) {
+    // cout << tripStop.m_strServiceDate << " " << tripStop.m_strTripID << " " << tripStop.m_strStationName << " " << tripStop.m_strDateTime << endl;
+    m_vecTripStops.push_back(tripStop);
+}
+
+void RoamPerStopResultAnalyser::extractTripStops() {
+    ifstream infile;
+    for (int i = 0; i < m_strInfileNames.size(); i++) {
+        infile.open(m_strInfileNames[i].c_str());
+        if (!infile.is_open()) {
+            cout << "File " << m_strInfileNames[i] << " couldn't be opened." << endl;
+            return;
+        }
+
+        cout << "Analysing " << m_strInfileNames[i] << endl;
+
+        string value;
+        string line;
+
+        int r = 1; // Avoid first row 
+        struct tm tm = {};
+        getline(infile, line);
+        while (getline(infile, line)) {
+            int c = 0;
+            stringstream ss(line);
+
+            string strStationName = "";
+            string strServiceDate = "";
+            string strArrivalTime = "";
+            string strTripName = "";
+
+            unsigned int nUnboardingCount = 0;
+            unsigned int nBoardingCount = 0;
+
+            while(c < m_iThisStationCol) {
+                getline(ss, value, m_cDivider);
+                c++;
+            }    
+            // This station
+            getline(ss, value, m_cDivider);
+            strStationName = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iServiceDateCol) {
+                getline(ss, value, m_cDivider);
+                c++;
+            }    
+            // Service Date in 2016-08-01
+            getline(ss, value, m_cDivider);
+            strServiceDate = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iArrivalTime) {
+                getline(ss, value, m_cDivider);
+                c++;
+            }    
+            // Arrival Time
+            getline(ss, value, m_cDivider);
+            strArrivalTime = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iTripNameCol) {
+                getline(ss, value, m_cDivider);
+
+                c++;
+            }
+            // Trip Name
+            getline(ss, value, m_cDivider);
+            strTripName = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iUnboardingCountCol) {
+                getline(ss, value, m_cDivider);
+
+                c++;
+            }
+            // Unboarding count
+            getline(ss, value, m_cDivider);
+            nUnboardingCount = atoi(value.c_str());
+            c++;
+
+            while(c < m_iBoardingCountCol) {
+                getline(ss, value, m_cDivider);
+
+                c++;
+            }
+            // Boarding count
+            getline(ss, value, m_cDivider);
+            nBoardingCount = atoi(value.c_str());
+            c++;
+            
+            while (getline(ss, value, m_cDivider)) {
+                c++;
+            }
+
+            TrainTripStop tripStop(strServiceDate, strTripName, strStationName, strStationName, strArrivalTime, nUnboardingCount, nBoardingCount);
+            updateTripStops(tripStop);
+
+            r++;
+        }
+
+        m_nTotalRows += r;
+
+        infile.close();
+    }
+}
+
+void CvmPerStopResultAnalyser::extractTripStops() {
+    ifstream infile;
+    for (int i = 0; i < m_strInfileNames.size(); i++) {
+        infile.open(m_strInfileNames[i].c_str());
+        if (!infile.is_open()) {
+            cout << "File " << m_strInfileNames[i] << " couldn't be opened." << endl;
+            return;
+        }
+
+        cout << "Analysing " << m_strInfileNames[i] << endl;
+
+        string value;
+        string line;
+
+        int r = 1; // Avoid first row 
+        struct tm tm = {};
+        getline(infile, line);
+        while (getline(infile, line)) {
+            int c = 0;
+            stringstream ss(line);
+
+            string strStationName = "";
+            string strServiceDate = "";
+            string strArrivalTime = "";
+            string strTripName = "";
+
+            unsigned int nUnboardingCount = 0;
+            unsigned int nBoardingCount = 0;
+
+            while(c < m_iTripNameCol) {
+                getline(ss, value, m_cDivider);
+
+                c++;
+            }
+            // Trip Name
+            getline(ss, value, m_cDivider);
+            strTripName = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iThisStationCol) {
+                getline(ss, value, m_cDivider);
+                c++;
+            }    
+            // This station
+            getline(ss, value, m_cDivider);
+            strStationName = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iServiceDateCol) {
+                getline(ss, value, m_cDivider);
+                c++;
+            }    
+            // Service Date in 2016-08-01
+            getline(ss, value, m_cDivider);
+            strServiceDate = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iArrivalTime) {
+                getline(ss, value, m_cDivider);
+                c++;
+            }    
+            // Arrival Time
+            getline(ss, value, m_cDivider);
+            strArrivalTime = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iUnboardingCountCol) {
+                getline(ss, value, m_cDivider);
+
+                c++;
+            }
+            // Unboarding count
+            getline(ss, value, m_cDivider);
+            nUnboardingCount = atoi(value.c_str());
+            c++;
+
+            while(c < m_iBoardingCountCol) {
+                getline(ss, value, m_cDivider);
+
+                c++;
+            }
+            // Boarding count
+            getline(ss, value, m_cDivider);
+            nBoardingCount = atoi(value.c_str());
+            c++;
+
+            while (getline(ss, value, m_cDivider)) {
+                c++;
+            }
+
+            TrainTripStop tripStop(strServiceDate, strTripName, strStationName, strStationName, strArrivalTime, nUnboardingCount, nBoardingCount);
+                // cout << tripStop.m_strServiceDate << " " << tripStop.m_strTripID << " " << tripStop.m_strStationName << " " << tripStop.m_strDateTime << endl;
+            updateTripStops(tripStop);
+            r++;
+        }
+
+        m_nTotalRows += r;
+
+        infile.close();
+    }
 }

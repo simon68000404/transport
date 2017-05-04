@@ -197,6 +197,7 @@ void PrePuncProcessor::extractTripStops() {
             string strServiceDate;
             string strTripName;
             string strStopStation;
+            string strPlannedStopStation;
             string strArrivalTime;
 
             while(c < m_iServiceDateCol) { // 1
@@ -218,6 +219,16 @@ void PrePuncProcessor::extractTripStops() {
             getline(ss, value, ',');
             // cout << c << " " << value << endl;
             strTripName = value.substr(1, value.length() - 2);
+            c++;
+
+            while(c < m_iPlannedStopStationCol) { // 19
+                getline(ss, value, ',');
+                // cout << c << " " << value << endl;
+                c++;
+            }
+            getline(ss, value, ',');
+            // cout << c << " " << value << endl;
+            strPlannedStopStation = value.substr(1, value.length() - 2);
             c++;
 
             while(c < m_iActStopStationCol) { // 19
@@ -246,7 +257,10 @@ void PrePuncProcessor::extractTripStops() {
                 c++;
             }
 
-            updateTripStops(strServiceDate, strTripName, strStopStation, strArrivalTime);
+            if (strServiceDate == "2016-09-01") {
+                TrainTripStop tripStop(strServiceDate, strTripName, strPlannedStopStation, strStopStation, strArrivalTime);
+                updateTripStops(tripStop);
+            }
 
             r++;
         }
@@ -255,13 +269,7 @@ void PrePuncProcessor::extractTripStops() {
     }
 }
 
-void PrePuncProcessor::updateTripStops(std::string strServiceDate, std::string strTripName, std::string strStationName, std::string strArrivalTime) {
-    TrainTripStop tripStop;
-    tripStop.strServiceDate;
-    tripStop.strTripID;
-    tripStop.strStationName;
-    tripStop.strDateTime;
-
+void PrePuncProcessor::updateTripStops(TrainTripStop tripStop) {
     m_vecAllTripStops.push_back(tripStop);
 }
 

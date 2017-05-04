@@ -32,21 +32,25 @@ public:
 	void calculatePerODCount();
 	void calculatePerLineCount();
 	void calculateExceptions();
+	void calculateInterchangeStationCount();
 	std::map<std::string, std::vector<int> > getOnPerStationCount();
 	std::map<std::string, std::vector<int> > getOffPerStationCount();
 	std::map<std::string, std::vector<int> > getPerODCount();
 	std::map<std::string, std::vector<int> > getPerLineCount();
+	std::map<std::string, std::vector<int> > getInterchangeStationCount();
 	int getTotalRowCount();
 	// std::map<std::string, std::vector<int> > getExceptions();
 protected:
 	void updatePerStationCount(std::string onStopName, std::string offStopName, int row);
 	void updatePerODCount(std::string onStopName, std::string offStopName, int row);
 	void updatePerLineCount(std::string strOnStopName, std::string strOffStopName, int nRow);
+	void updateInterchangeStationCount(std::string strStopName, int nRow);
 protected:
 	std::map<std::string, std::vector<int> > m_mapOnCountPerStation;
 	std::map<std::string, std::vector<int> > m_mapOffCountPerStation;
 	std::map<std::string, std::vector<int> > m_mapCountPerOD;
 	std::map<std::string, std::vector<int> > m_mapCountPerLine;
+	std::map<std::string, std::vector<int> > m_mapInterchangeStations;
 
 	std::vector<std::string> m_strInfileNames;
 
@@ -105,6 +109,7 @@ public:
 	void calculatePerODCount();
 	void calculatePerLineCount();
 	void calculateExceptions();
+	void calculateInterchangeStationCount();
 
 	std::vector<int> getMT2TripsCount();
 	// std::map<std::string, std::vector<int> > getExceptions();
@@ -128,6 +133,7 @@ public:
 	void calculatePerStationCountWithTransfers();
 	void calculatePerODCount();
 	void calculatePerLineCount();
+	void calculateInterchangeStationCount();
 
 private:
 	int m_iRunIdCol;

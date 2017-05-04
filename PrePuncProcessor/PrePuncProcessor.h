@@ -14,10 +14,23 @@ public:
 
 class TrainTripStop {
 public:
-    std::string strServiceDate; // "2016-09-01"
-    std::string strTripID; // "204S"
-    std::string strStationName; // "Central"
-    std::string strDateTime; // 2016-09-01 or Missing
+    TrainTripStop():m_nUnboardingCount(0), m_nBoardingCount(0) {}
+    TrainTripStop(std::string strServiceDate, std::string strTripID, std::string strPlannedStationName, std::string strStationName, std::string strDateTime, unsigned int nAlightingCount = 0, unsigned int nBoardingCount = 0):
+        m_strServiceDate(strServiceDate),
+        m_strTripID(strTripID),
+        m_strPlannedStationName(strPlannedStationName),
+        m_strStationName(strStationName),
+        m_strDateTime(strDateTime),
+        m_nUnboardingCount(nAlightingCount),
+        m_nBoardingCount(nBoardingCount) {}
+    std::string m_strServiceDate; // "2016-09-01"
+    std::string m_strTripID; // "204S"
+    std::string m_strPlannedStationName;
+    std::string m_strStationName; // "Central"
+    std::string m_strDateTime; // 2016-09-01 or Missing
+
+    unsigned int m_nUnboardingCount;
+    unsigned int m_nBoardingCount;
 };
 
 // class TrainTrip {
@@ -66,7 +79,7 @@ private:
     void updateExceptionDprtLTArrv(int nRow, std::string strThatRow);
 
     void updateTripNames(std::string strTripName);
-    void updateTripStops(std::string strServiceDate, std::string strTripName, std::string strStationName, std::string strArrivalTime);
+    void updateTripStops(TrainTripStop tripStop);
 
     int compareTimeStringLT(std::string t1, std::string t2);
     int m_iPlannedDprtTimeCol;

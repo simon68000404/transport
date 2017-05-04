@@ -180,6 +180,99 @@ void exportCountComparisonWithGEH(string fileName, map<string, unsigned int> &ma
     outfile.close();
 }
 
+void exportCountComparisonWithGEH2(string fileName, map<string, unsigned int> &map1, map<string, unsigned int> &map2, string strTitle) {
+    float fGEH = 0.0f;
+    float fTotalGEH = 0.0f;
+    float fSumGEH = 0.0f;
+    float fAverageGEH = 0.0f;
+    bool bGEHLT5 = false;
+    unsigned int nGEHLT5Count = 0;
+
+    float fSumInaccuracy = 0.0f;
+    float fAverageInaccuracy = 0.0f;
+    float fTotalInaccuracy = 0.0f;
+    float fAccuracy = 0.0f;
+    float fInaccuracy = 0.0f;
+
+    unsigned int nTotalCount1 = 0;
+    unsigned int nTotalCount2 = 0;
+    float fAverageCount1 = 0.0f;
+    float fAverageCount2 = 0.0f;
+
+    set<string> setAllStations;
+    for (map<string, unsigned int>::iterator it = map1.begin(); it != map1.end(); it++) {
+        setAllStations.insert(it->first);
+    }
+    for (map<string, unsigned int>::iterator it = map2.begin(); it != map2.end(); it++) {
+        setAllStations.insert(it->first);
+    }
+
+    ofstream outfile;
+
+    outfile.open(fileName);
+    outfile << strTitle << endl;
+
+    for (set<string>::iterator it = setAllStations.begin(); it != setAllStations.end(); it++) {
+        unsigned int count1 = 0;
+        unsigned int count2 = 0;
+
+        map<string, unsigned int>::iterator it1 = map1.find(*it);
+        if (it1 != map1.end()) {
+            count1 = it1->second;
+        }
+        map<string, unsigned int>::iterator it2 = map2.find(*it);
+        if (it2 != map2.end()) {
+            count2 = it2->second;
+        }
+
+        if (count1 > 0 && count2 > 0) {
+            fGEH = sqrt(2.0f * float((count2 - count1) * (count2 - count1)) / float(count2 + count1));
+
+            fAccuracy = float(count2)/float(count1);
+            fInaccuracy = 1 - fAccuracy;
+        }
+        else if (count1 > 0) {
+            fGEH = sqrt(2.0f * float(count1));
+            
+            fAccuracy = 0;
+            fInaccuracy = 1;
+        }
+        else if (count2 > 0) {
+            fGEH = sqrt(2.0f * float(count2));
+            
+            fAccuracy = 0;
+            fInaccuracy = 1;
+        }
+
+        bGEHLT5 = fGEH < 5 ? true : false;
+        nGEHLT5Count += bGEHLT5 == true ? 1 : 0;
+
+        nTotalCount1 += count1;
+        nTotalCount2 += count2;
+
+        outfile << *it << ", " << count1 << ", " << count2 << ", " << fGEH << "," << bGEHLT5 << "," << fInaccuracy << endl;
+
+        fSumInaccuracy += fInaccuracy;
+        fSumGEH += fGEH;
+    }
+
+    fTotalGEH = sqrt(2.0f * float((nTotalCount2 - nTotalCount1) * (nTotalCount2 - nTotalCount1)) / float(nTotalCount2 + nTotalCount1));
+    fAverageGEH = fSumGEH/map1.size();
+
+    fTotalInaccuracy = float(nTotalCount2)/float(nTotalCount1);
+    fAverageInaccuracy = fSumInaccuracy/map1.size();
+
+    fAverageCount1 = float(nTotalCount1)/map1.size();
+    fAverageCount2 = float(nTotalCount2)/map2.size();
+
+    cout << "map1.size: " << map1.size() << "map2.size: " << map2.size() << "combined size: " << setAllStations.size() << endl;
+
+    outfile << "Total" << "," << nTotalCount1 << "," << nTotalCount2 << "," << fTotalGEH << "," << nGEHLT5Count << "," << fTotalInaccuracy << endl;
+    outfile << "Average" << "," << fAverageCount1 << "," << fAverageCount2 << "," << fAverageGEH << ",," << fAverageInaccuracy << endl;
+
+    outfile.close();
+}
+
 void TransportApplication::compareOpalAndRoamPerStationPerDay(vector<string> strOpalInputCSVNames, vector<string> strRoamInputCSVNames, 
     string strOnOutputCSVName, string strOffOutputCSVName) {
     int nOpalCSVCount = strOpalInputCSVNames.size();
@@ -684,6 +777,22 @@ void TransportApplication::compareRoamAndCvmPerStationFromPerStopData(vector<str
     exportCountComparisonWithGEH(strOffOutputCSVName, mapOffRoamPerStopCount, mapOffCvmPerStopCount, "Station,Roam per stop,Cvm per stop,GEH,GEH<5,Inaccuracy");
 }
 
+void TransportApplication::compareRoamAndCvmInterchangesPerDay(std::vector<std::string> strRoamInputCSVNames, std::vector<std::string> strCvmInputCSVNames, std::string strOutputCSVName) {
+    RoamResultAnalyser roam;
+    roam.setFiles(strRoamInputCSVNames);
+    roam.calculateInterchangeStationCount();
+    map<string, unsigned int> mapRoamInterchangeCount = sumUpVecRowToUIntCount(roam.getInterchangeStationCount());
+
+    CvmResultAnalyser cvm;
+    cvm.setFiles(strCvmInputCSVNames);
+    cvm.calculateInterchangeStationCount();
+    map<string, unsigned int> mapCvmInterchangeCount = sumUpVecRowToUIntCount(cvm.getInterchangeStationCount());
+
+    cout << mapRoamInterchangeCount.size() << " " << mapCvmInterchangeCount.size() << endl;
+
+    exportCountComparisonWithGEH2(strOutputCSVName, mapRoamInterchangeCount, mapCvmInterchangeCount, "Station,Roam per person,Cvm per person,GEH,GEH<5,Inaccuracy");
+}
+
 void exportCompleteness(vector<string> vecAllTripNames, map<string, map<string, unsigned int> > &mapTripNamesFromPathFindingMethods, string strOutputCSVName) {
     unsigned int nMapRoamCoverageCount = 0;
     unsigned int nMapCvmCoverageCount = 0;
@@ -754,6 +863,268 @@ void exportCompleteness(vector<string> vecAllTripNames, map<string, map<string, 
 
     outfile << "Total," << nMapRoamCoverageCount << "," << nMapCvmCoverageCount << endl;
     outfile << "Completeness Rate," << float(nMapRoamCoverageCount)/float(vecAllTripNames.size()) << "," << float(nMapCvmCoverageCount)/float(vecAllTripNames.size()) << endl;
+
+    outfile.close();
+}
+
+vector<TrainTripStop> findTheTrainTripStops(vector<TrainTripStop> &vec, TrainTripStop &tripStop, bool bFindAll) {
+    vector<TrainTripStop> ret;
+    for (int i = 0; i < vec.size(); i++) {
+        if (tripStop.m_strServiceDate == vec[i].m_strServiceDate
+            && tripStop.m_strTripID == vec[i].m_strTripID
+            && tripStop.m_strStationName == vec[i].m_strStationName
+            && tripStop.m_strDateTime == vec[i].m_strDateTime) {
+            ret.push_back(vec[i]);
+            if (!bFindAll)
+                break;
+        }
+    }
+
+    return ret;
+}
+
+vector<TrainTripStop> findTheNoTimeTrainTripStops(vector<TrainTripStop> &vec, TrainTripStop &tripStop, bool bFindAll) {
+    vector<TrainTripStop> ret;
+    // cout << "The stop: -----------------------------------------" << tripStop.m_strStationName << endl;
+    for (int i = 0; i < vec.size(); i++) {
+        // if (vec[i].m_strStationName == "Narara")
+        //     cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~" << tripStop.m_strPlannedStationName << " " << vec[i].m_strStationName << " " << (tripStop.m_strPlannedStationName == vec[i].m_strStationName) << endl;
+        if (tripStop.m_strServiceDate == vec[i].m_strServiceDate
+            && tripStop.m_strTripID == vec[i].m_strTripID
+            && tripStop.m_strPlannedStationName == vec[i].m_strStationName) {
+            // cout << "pushed------------" << endl;
+            ret.push_back(vec[i]);
+            if (!bFindAll)
+                break;
+        }
+    }
+
+    return ret;
+}
+
+void exportCompleteness3(vector<TrainTripStop> vecAllTripStops, map<string, vector<TrainTripStop> > &mapTripNamesFromPathFindingMethods, string strOutputCSVName) {
+    unsigned int nRoamCoverageCount = 0;
+    unsigned int nCvmCoverageCount = 0;
+
+    ofstream outfile;
+
+    outfile.open(strOutputCSVName);
+    if (!outfile) {
+      cerr << "Can't write to output file " << strOutputCSVName << endl;
+      exit(1);
+    }
+    outfile << "Service Date,Trip ID, Planned Station, Actual Station, Actual Arrival Time, ROAM, CVM" << endl;
+
+    map<string, vector<TrainTripStop> >::iterator itRoam = mapTripNamesFromPathFindingMethods.find("Roam");
+    map<string, vector<TrainTripStop> >::iterator itCvm = mapTripNamesFromPathFindingMethods.find("Cvm");
+
+    vector<TrainTripStop> vecRoam;
+    vector<TrainTripStop> vecCvm;
+
+    if (itRoam != mapTripNamesFromPathFindingMethods.end()) {
+        vecRoam = itRoam->second;
+    }
+
+    if (itCvm != mapTripNamesFromPathFindingMethods.end()) {
+        vecCvm = itCvm->second;
+    }
+
+    for (int i = 0; i < vecAllTripStops.size(); i++) {
+        vector<TrainTripStop> vecRoamMatchedStops;
+        TrainTripStop roamMatchedStop;
+        bool bRoamFound = false;
+
+        if (vecRoam.size() > 0) {
+            if (vecAllTripStops[i].m_strDateTime == "") {
+                vecRoamMatchedStops = findTheNoTimeTrainTripStops(vecRoam, vecAllTripStops[i], false);
+                cout << "roam found interpolated " << vecAllTripStops[i].m_strTripID << endl;
+                cout << "punc " << vecAllTripStops[i].m_strServiceDate << " planned:" << vecAllTripStops[i].m_strPlannedStationName << vecAllTripStops[i].m_strTripID << " " << vecAllTripStops[i].m_strStationName << " " << vecAllTripStops[i].m_strDateTime << vecAllTripStops[i].m_nUnboardingCount << " " << vecAllTripStops[i].m_nBoardingCount << endl;
+            }
+            else {
+                vecRoamMatchedStops = findTheTrainTripStops(vecRoam, vecAllTripStops[i], false);
+                cout << "roam found " << vecAllTripStops[i].m_strTripID << endl;
+            }
+
+            if (vecRoamMatchedStops.size() > 0) {
+                roamMatchedStop = vecRoamMatchedStops[0];
+
+                nRoamCoverageCount++;
+
+                bRoamFound = true;
+            }
+        }
+
+        vector<TrainTripStop> vecCvmMatchedStops;
+        TrainTripStop cvmMatchedStop;
+        bool bCvmFound = false;
+
+        if (vecCvm.size() > 0) {
+            if (vecAllTripStops[i].m_strDateTime == "") {
+                cout << "cvm found interpolated " << vecAllTripStops[i].m_strTripID << endl;
+                vecCvmMatchedStops = findTheNoTimeTrainTripStops(vecCvm, vecAllTripStops[i], false);
+            }
+            else {
+                vecCvmMatchedStops = findTheTrainTripStops(vecCvm, vecAllTripStops[i], false);
+                cout << "cvm found " << vecAllTripStops[i].m_strTripID << endl;
+            }
+
+            if (vecCvmMatchedStops.size() > 0) {
+                cvmMatchedStop = vecCvmMatchedStops[0];
+
+                nCvmCoverageCount++;
+
+                bCvmFound = true;
+            }
+        }
+
+        // cout << (bRoamFound ? "ROAM found" : "ROAM not found") << endl;
+
+        outfile << vecAllTripStops[i].m_strServiceDate 
+            << "," << vecAllTripStops[i].m_strTripID 
+            << "," << vecAllTripStops[i].m_strPlannedStationName
+            << "," << vecAllTripStops[i].m_strStationName 
+            << "," << vecAllTripStops[i].m_strDateTime;
+
+        if (bRoamFound) {
+            outfile << ",yes";
+        }
+        else {
+            outfile << ",";
+        } 
+
+        if (bCvmFound) {
+            outfile << ",yes";
+        }
+        else {
+            outfile << ",";
+        } 
+            
+        outfile << endl;
+    }
+
+    outfile << "Total," << nRoamCoverageCount << "," << nCvmCoverageCount << endl;
+    outfile << "Completeness Rate," << float(nRoamCoverageCount)/float(vecAllTripStops.size()) << "," << float(nCvmCoverageCount)/float(vecAllTripStops.size()) << endl;
+
+    outfile.close();
+}
+
+void exportCompleteness2(vector<TrainTripStop> vecAllTripStops, map<string, vector<TrainTripStop> > &mapTripNamesFromPathFindingMethods, string strOutputCSVName) {
+    unsigned int nRoamCoverageCount = 0;
+    unsigned int nCvmCoverageCount = 0;
+
+    ofstream outfile;
+
+    outfile.open(strOutputCSVName);
+    if (!outfile) {
+      cerr << "Can't write to output file " << strOutputCSVName << endl;
+      exit(1);
+    }
+    outfile << "Service Date,Trip ID, Station, Actual Arrival Time, ROAM unboarding count, ROAM boarding count, CVM unboarding count, CVM boarding count" << endl;
+
+    map<string, vector<TrainTripStop> >::iterator itRoam = mapTripNamesFromPathFindingMethods.find("Roam");
+    map<string, vector<TrainTripStop> >::iterator itCvm = mapTripNamesFromPathFindingMethods.find("Cvm");
+
+    vector<TrainTripStop> vecRoam;
+    vector<TrainTripStop> vecCvm;
+
+    if (itRoam != mapTripNamesFromPathFindingMethods.end()) {
+        vecRoam = itRoam->second;
+    }
+
+    if (itCvm != mapTripNamesFromPathFindingMethods.end()) {
+        vecCvm = itCvm->second;
+    }
+
+    for (int i = 0; i < vecAllTripStops.size(); i++) {
+        vector<TrainTripStop> vecRoamMatchedStops;
+        TrainTripStop roamMatchedStop;
+        bool bRoamFound = false;
+
+        if (vecRoam.size() > 0) {
+            if (vecAllTripStops[i].m_strDateTime == "") {
+                vecRoamMatchedStops = findTheTrainTripStops(vecRoam, vecAllTripStops[i], true);
+                cout << "found " << vecAllTripStops[i].m_strTripID << endl;
+                cout << "punc " << vecAllTripStops[i].m_strServiceDate << " " << vecAllTripStops[i].m_strTripID << " " << vecAllTripStops[i].m_strStationName << " " << vecAllTripStops[i].m_strDateTime << vecAllTripStops[i].m_nUnboardingCount << " " << vecAllTripStops[i].m_nBoardingCount << endl;
+            }
+            else {
+                vecRoamMatchedStops = findTheNoTimeTrainTripStops(vecRoam, vecAllTripStops[i], true);
+                cout << "found interpolated " << vecAllTripStops[i].m_strTripID << endl;
+            }
+
+            if (vecRoamMatchedStops.size() > 0) {
+                roamMatchedStop = vecRoamMatchedStops[0];
+
+                nRoamCoverageCount++;
+
+                if (vecRoamMatchedStops.size() > 1) {
+                    // for (int j = 1; j < vecRoamMatchedStops.size(); j++) {
+                    //     cout << "Roam " << vecRoamMatchedStops[j].m_strServiceDate << " " << vecRoamMatchedStops[j].m_strTripID << " " << vecRoamMatchedStops[j].m_strStationName << " " << vecRoamMatchedStops[j].m_strDateTime << vecRoamMatchedStops[j].m_nUnboardingCount << " " << vecRoamMatchedStops[j].m_nBoardingCount << endl;
+                    //     roamMatchedStop.m_nUnboardingCount += vecRoamMatchedStops[i].m_nUnboardingCount;
+                    //     roamMatchedStop.m_nBoardingCount += vecRoamMatchedStops[i].m_nBoardingCount;
+                    // }
+                    cout << "Multiple rows matched." << endl;
+                }
+
+                bRoamFound = true;
+            }
+        }
+
+        vector<TrainTripStop> vecCvmMatchedStops;
+        TrainTripStop cvmMatchedStop;
+        bool bCvmFound = false;
+
+        if (vecCvm.size() > 0) {
+            if (vecAllTripStops[i].m_strDateTime == "") {
+                vecCvmMatchedStops = findTheTrainTripStops(vecCvm, vecAllTripStops[i], true);
+            }
+            else {
+                vecCvmMatchedStops = findTheNoTimeTrainTripStops(vecCvm, vecAllTripStops[i], true);
+            }
+
+            if (vecCvmMatchedStops.size() > 0) {
+                cvmMatchedStop = vecCvmMatchedStops[0];
+
+                nCvmCoverageCount++;
+
+                if (vecCvmMatchedStops.size() > 1) {
+                    // for (int j = 1; j < vecCvmMatchedStops.size(); j++) {
+                    //     cout << "Cvm " << vecCvmMatchedStops[j].m_strServiceDate << " " << vecCvmMatchedStops[j].m_strTripID << " " << vecCvmMatchedStops[j].m_strStationName << " " << vecCvmMatchedStops[j].m_strDateTime << vecCvmMatchedStops[j].m_nUnboardingCount << " " << vecCvmMatchedStops[j].m_nBoardingCount << endl;
+                    //     cvmMatchedStop.m_nUnboardingCount += vecCvmMatchedStops[i].m_nUnboardingCount;
+                    //     cvmMatchedStop.m_nBoardingCount += vecCvmMatchedStops[i].m_nBoardingCount;
+                    // }
+                    cout << "Multiple rows matched." << endl;
+                }
+
+                bCvmFound = true;
+            }
+        }
+
+        outfile << vecAllTripStops[i].m_strServiceDate 
+            << "," << vecAllTripStops[i].m_strTripID 
+            << "," << vecAllTripStops[i].m_strStationName 
+            << "," << vecAllTripStops[i].m_strDateTime;
+
+        if (bRoamFound) {
+            outfile << "," << roamMatchedStop.m_nUnboardingCount
+                << "," << roamMatchedStop.m_nBoardingCount;
+        }
+        else {
+            outfile << ",,";
+        } 
+
+        if (bCvmFound) {
+            outfile << "," << cvmMatchedStop.m_nUnboardingCount
+                << "," << cvmMatchedStop.m_nBoardingCount;
+        }
+        else {
+            outfile << ",,";
+        } 
+            
+        outfile << endl;
+    }
+
+    outfile << "Total," << nRoamCoverageCount << "," << nCvmCoverageCount << endl;
+    outfile << "Completeness Rate," << float(nRoamCoverageCount)/float(vecAllTripStops.size()) << "," << float(nCvmCoverageCount)/float(vecAllTripStops.size()) << endl;
 
     outfile.close();
 }
@@ -878,48 +1249,50 @@ void TransportApplication::checkCompleteness(std::vector<std::string> strPuncInp
 }
 
 void TransportApplication::checkCompleteness2(std::vector<std::string> strPuncInputCSVNames, std::map<std::string, std::vector<std::string> > mapPerStopInputCSVNames, std::string strOutputCSVName) {
-    // PrePuncProcessor punc;
-    // punc.setFiles(strPuncInputCSVNames);
-    // punc.extractTripStops();
-    // vector<TrainTripStop> vecAllTripStops = punc.getTripStops();
+    PrePuncProcessor punc;
+    punc.setFiles(strPuncInputCSVNames);
+    punc.extractTripStops();
+    vector<TrainTripStop> &vecAllTripStops = punc.getTripStops();
 
-    // map<string, vector<string> >::iterator it;
-    // vector<string> vecRoamInputFiles;
-    // vector<string> vecCvmInputFiles;
+    map<string, vector<string> >::iterator it;
+    vector<string> vecRoamInputFiles;
+    vector<string> vecCvmInputFiles;
     
-    // it = mapPerStopInputCSVNames.find("Roam");
-    // if (it != mapPerStopInputCSVNames.end()) {
-    //     vecRoamInputFiles = it->second;
-    // }
+    it = mapPerStopInputCSVNames.find("Roam");
+    if (it != mapPerStopInputCSVNames.end()) {
+        vecRoamInputFiles = it->second;
+    }
 
-    // it = mapPerStopInputCSVNames.find("Cvm");
-    // if (it != mapPerStopInputCSVNames.end()) {
-    //     vecCvmInputFiles = it->second;
-    // }
+    it = mapPerStopInputCSVNames.find("Cvm");
+    if (it != mapPerStopInputCSVNames.end()) {
+        vecCvmInputFiles = it->second;
+    }
 
-    // map<TrainTripStop, unsigned int> mapRoamTripStopRows;
-    // map<TrainTripStop, unsigned int> mapCvmTripStopRows;
-    // map<string, map<TrainTripStop, unsigned int> > mapTripStopNamesFromPathFindingMethods;
+    vector<TrainTripStop> vecRoamTripStops;
+    vector<TrainTripStop> vecCvmTripStops;
+    map<string, vector<TrainTripStop> > mapTripStopNamesFromPathFindingMethods;
 
-    // if (vecRoamInputFiles.size() > 0) {
-    //     RoamPerStopResultAnalyser roam;
-    //     roam.setFiles(vecRoamInputFiles);
-    //     roam.extractTripStopRows();
-    //     mapRoamTripStopRows = sumUpVecRowToUIntCount(roam.getTripStopRows());
+    if (vecRoamInputFiles.size() > 0) {
+        RoamPerStopResultAnalyser roam;
+        roam.setFiles(vecRoamInputFiles);
+        roam.extractTripStops();
+        vecRoamTripStops = roam.getTripStops();
         
-    //     mapTripStopNamesFromPathFindingMethods.insert(pair<string, map<TrainTripStop, unsigned int> >("Roam", mapRoamTripStopRows));
-    // }
+        mapTripStopNamesFromPathFindingMethods.insert(pair<string, vector<TrainTripStop> >("Roam", vecRoamTripStops));
+    }
 
-    // if (vecCvmInputFiles.size() > 0) {
-    //     CvmPerStopResultAnalyser cvm;
-    //     cvm.setFiles(vecCvmInputFiles);
-    //     cvm.extractTripStopRows();
-    //     mapCvmTripStopRows = sumUpVecRowToUIntCount(cvm.getTripStopRows());
+    if (vecCvmInputFiles.size() > 0) {
+        CvmPerStopResultAnalyser cvm;
+        cvm.setFiles(vecCvmInputFiles);
+        cvm.extractTripStops();
+        vecCvmTripStops = cvm.getTripStops();
 
-    //     mapTripStopNamesFromPathFindingMethods.insert(pair<string, map<TrainTripStop, unsigned int> >("Cvm", mapCvmTripStopRows));
-    // }
+        mapTripStopNamesFromPathFindingMethods.insert(pair<string, vector<TrainTripStop> >("Cvm", vecCvmTripStops));
+    }
 
-    // exportCompleteness(vecAllTripStops, mapTripStopNamesFromPathFindingMethods, strOutputCSVName);
+    cout << vecAllTripStops.size() << " " << vecRoamTripStops.size() << " " << vecCvmTripStops.size() << endl;
+
+    exportCompleteness3(vecAllTripStops, mapTripStopNamesFromPathFindingMethods, strOutputCSVName);
 }
 
 void TransportApplication::compareOpalAndCvmPerStationPerDay(std::vector<std::string> strOpalInputCSVNames, std::vector<std::string> strCvmInputCSVNames, std::string strOnOutputCSVName, std::string strOffOutputCSVName) {

@@ -19,15 +19,18 @@ using namespace std;
 #define OPAL_VS_ROAM_PER_LINE_PER_DAY 0
 
 #define OPAL_VS_CVM_PER_STATION_PER_MONTH 0
-#define OPAL_VS_CVM_PER_STATION_PER_DAY 1
+#define OPAL_VS_CVM_PER_STATION_PER_DAY 0
 
 #define OPAL_VS_CVM_PER_OD_PER_MONTH 0
-#define OPAL_VS_CVM_PER_OD_PER_DAY 1
+#define OPAL_VS_CVM_PER_OD_PER_DAY 0
 
 #define OPAL_VS_CVM_PER_LINE_PER_MONTH 0
-#define OPAL_VS_CVM_PER_LINE_PER_DAY 1
+#define OPAL_VS_CVM_PER_LINE_PER_DAY 0
 
 #define CVM_VS_ROAM_PER_STATION_PER_MONTH 0
+
+#define CVM_VS_ROAM_INTERCHANGES_PER_MONTH 0
+#define CVM_VS_ROAM_INTERCHANGES_PER_DAY 0
 
 #define EXTRACT_LINE_STATIONS 0
 
@@ -44,11 +47,14 @@ using namespace std;
 #define CVM_PERSON_VS_STOP_PER_STATION 0
 
 #define COMPLETENESS_CHECK 0
+#define COMPLETENESS_CHECK2_PER_MONTH 1
+#define COMPLETENESS_CHECK2_PER_DAY 0
 
 int main(int argc, char* argv[]) {
     string strHardDriveBaseName = "/media/nlp/Elements/";
 	string puncFile = strHardDriveBaseName + "Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160831.csv";
     string puncFile201609 = strHardDriveBaseName + "Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160930.csv";
+    string puncFileDistinct201609 = strHardDriveBaseName + "Transport/Punctuality/cvm_punctuality_station_data_extract_ver0_2_20160930_distinct.csv";
 
     string opalFileNames[] = {
         "JS_ALL_V.20160801_20160816.csvp",
@@ -289,16 +295,20 @@ int main(int argc, char* argv[]) {
     vector<string> strRoamNames;
     vector<string> strRoamNames201609;
     vector<string> strCvmNames201609;
+
     vector<string> strRoamOpalDayOnOutputNames;
     vector<string> strRoamOpalDayOffOutputNames;
     vector<string> strRoamOpalDayOnOutputNames201609;
     vector<string> strRoamOpalDayOffOutputNames201609;
     vector<string> strCvmOpalDayOnOutputNames201609;
     vector<string> strCvmOpalDayOffOutputNames201609;
+    
     vector<string> strRoamOpalDayODOutputNames;
+    
     vector<string> strRoamOpalDayLineOutputNames;
     vector<string> strRoamOpalDayLineOutputNames201609;
     vector<string> strCvmOpalDayLineOutputNames201609;
+    
     vector<string> strRoamOpalDayODOutputNames201609;
     vector<string> strCvmOpalDayODOutputNames201609;
 
@@ -311,20 +321,29 @@ int main(int argc, char* argv[]) {
     vector<string> strRoamPerStopDayOnOutputNames;
     vector<string> strRoamPerStopDayOffOutputNames;
 
+    vector<string> strCompletenessCheckOutput201609;
+
+    vector<string> strRoamCvmInterchangesDayOutputNames201609;
+
+
     string strMergedOnOutputName = "./Results/201608/Per Station/Summary/opal_roam_per_station_08_on.csv";
     string strMergedOffOutputName = "./Results/201608/Per Station/Summary/opal_roam_per_station_08_off.csv";
     string strMergedODOutputName = "./Results/201608/Per OD Pair/Summary/opal_roam_per_od_08.csv";
     string strMergedLineOutputName = "./Results/201608/Per Line/Summary/opal_roam_per_line_08.csv";
 
-    string strMergedOnOutputName201609 = "./Results/201609/Per Station/Summary/opal_roam_per_station_09_on.csv";
-    string strMergedOffOutputName201609 = "./Results/201609/Per Station/Summary/opal_roam_per_station_09_off.csv";
-    string strMergedODOutputName201609 = "./Results/201609/Per OD Pair/Summary/opal_roam_per_od_09.csv";
-    string strMergedLineOutputName201609 = "./Results/201609/Per Line/Summary/opal_roam_per_line_09.csv";
+    string strMergedRoamOpalOnOutputName201609 = "./Results/201609/Per Station/Summary/opal_roam_per_station_09_on.csv";
+    string strMergedRoamOpalOffOutputName201609 = "./Results/201609/Per Station/Summary/opal_roam_per_station_09_off.csv";
+    string strMergedRoamOpalODOutputName201609 = "./Results/201609/Per OD Pair/Summary/opal_roam_per_od_09.csv";
+    string strMergedRoamOpalLineOutputName201609 = "./Results/201609/Per Line/Summary/opal_roam_per_line_09.csv";
 
     string strMergedCvmOpalOnOutputName201609 = "./Results/201609/Per Station/Summary/opal_cvm_per_station_09_on.csv";
     string strMergedCvmOpalOffOutputName201609 = "./Results/201609/Per Station/Summary/opal_cvm_per_station_09_off.csv";
     string strMergedCvmOpalODOutputName201609 = "./Results/201609/Per OD Pair/Summary/opal_cvm_per_od_09.csv";
     string strMergedCvmOpalLineOutputName201609 = "./Results/201609/Per Line/Summary/opal_cvm_per_line_09.csv";
+
+    string strMergedRoamCvmInterchangesOutputName201609 = "./Results/201609/Interchanges/Summary/roam_cvm_just_interchanges_09.csv";
+
+    string strMergedCompletenessCheckOutput201609 = "./Results/201609/Completeness Check/Summary/roam_cvm_completeness_check_09.csv";
 
     // self check 
     string strMergedRoamPerStopOnOutputName = "./Results/roam_pp_vs_ps_per_station_08_on.csv";
@@ -379,10 +398,16 @@ int main(int argc, char* argv[]) {
         strRoamOpalDayLineOutputNames201609.push_back("./Results/201609/Per Line/Daily Reports/opal_roam_per_line_09" + strDate + ".csv");
         strCvmOpalDayLineOutputNames201609.push_back("./Results/201609/Per Line/Daily Reports/opal_cvm_per_line_09" + strDate + ".csv");
         
+        strCompletenessCheckOutput201609.push_back("./Results/201609/Completeness Check/Daily Reports/roam_cvm_completeness_check_09" + strDate + ".csv");
+
+        strRoamCvmInterchangesDayOutputNames201609.push_back("./Results/201609/Interchanges/Daily Reports/roam_cvm_just_interchanges_09" + strDate + ".csv");
+        
         strRoamPerStopNames201609.push_back(strHardDriveBaseName + "Transport/Roam/Stop/" + roamPerStopFileNames201609[i]);
+
+        strCvmPerStopNames201609.push_back(strHardDriveBaseName + "Transport/CVM/Stop/201609" + strDate + "_d__services_calcs.csv");
     }
 
-    strCvmPerStopNames201609.push_back(strHardDriveBaseName + "Transport/CVM/Stop/d__services_calcs.csv");
+    // strCvmPerStopNames201609.push_back(strHardDriveBaseName + "Transport/CVM/Stop/d__services_calcs.csv");
 
     // All stations -> lines
     map<string, vector<string> > mapStationLines = TransportApplication::importAllStationLinesOneToOne("Stations_Lines_311_20160706.csv", 2, 4);
@@ -534,8 +559,8 @@ int main(int argc, char* argv[]) {
     TransportApplication::compareOpalAndRoamPerStationPerDay(
         strOpalNames201609, 
         strRoamNames201609, 
-        strMergedOnOutputName201609, 
-        strMergedOffOutputName201609);
+        strMergedRoamOpalOnOutputName201609, 
+        strMergedRoamOpalOffOutputName201609);
 #endif
 #if OPAL_VS_ROAM_PER_STATION_PER_DAY
     // Per station - each day of sep into one csv
@@ -556,7 +581,7 @@ int main(int argc, char* argv[]) {
     TransportApplication::compareOpalAndRoamPerODPerDay(
         strOpalNames201609, 
         strRoamNames201609, 
-        strMergedODOutputName201609);
+        strMergedRoamOpalODOutputName201609);
 #endif
 #if OPAL_VS_ROAM_PER_OD_PER_DAY
     // Per od - each day of aug into one csv
@@ -582,7 +607,7 @@ int main(int argc, char* argv[]) {
     TransportApplication::compareOpalAndRoamPerLinePerDay(
         strOpalNames201609, 
         strRoamNames201609, 
-        strMergedLineOutputName201609, mapStationLines);
+        strMergedRoamOpalLineOutputName201609, mapStationLines);
 #endif
 #if OPAL_VS_ROAM_PER_LINE_PER_DAY
     // Per line - each day of aug into one csv
@@ -602,11 +627,11 @@ int main(int argc, char* argv[]) {
 #if OPAL_VS_CVM_PER_STATION_PER_MONTH
     // Per station - whole sep into one csv
     cout << "September Opal vs CVM per station - month" << endl;
-    TransportApplication::compareOpalAndRoamPerStationPerDay(
+    TransportApplication::compareOpalAndCvmPerStationPerDay(
         strOpalNames201609, 
         strCvmNames201609, 
-        strMergedOnOutputName201609, 
-        strMergedOffOutputName201609);
+        strMergedCvmOpalOnOutputName201609, 
+        strMergedCvmOpalOffOutputName201609);
 #endif
 #if OPAL_VS_CVM_PER_STATION_PER_DAY
     // Per station - each day of sep into one csv
@@ -620,13 +645,14 @@ int main(int argc, char* argv[]) {
         TransportApplication::compareOpalAndCvmPerStationPerDay(strInputNames1, strInputNames2, strCvmOpalDayOnOutputNames201609[i], strCvmOpalDayOffOutputNames201609[i]);
     }
 #endif
+
 #if OPAL_VS_CVM_PER_OD_PER_MONTH
     // Per od - whole aug into one csv
-    // cout << "September Opal vs Roam per od - month" << endl;
-    // TransportApplication::compareOpalAndRoamPerODPerDay(
-    //     strOpalNames201609, 
-    //     strRoamNames201609, 
-    //     strMergedODOutputName201609);
+    cout << "September Opal vs Cvm per od - month" << endl;
+    TransportApplication::compareOpalAndCvmPerODPerDay(
+        strOpalNames201609, 
+        strCvmNames201609, 
+        strMergedCvmOpalODOutputName201609);
 #endif
 #if OPAL_VS_CVM_PER_OD_PER_DAY
     // Per od - each day of aug into one csv
@@ -644,21 +670,49 @@ int main(int argc, char* argv[]) {
 #if OPAL_VS_CVM_PER_LINE_PER_MONTH
     // map<string, vector<string> > mapStationLines = TransportApplication::importAllStationLines("all_lines.csv");
     // Per line - whole aug into one csv
-    // TransportApplication::compareOpalAndRoamPerLinePerDay(
-    //     strOpalNames, 
-    //     strRoamNames, 
-    //     strMergedLineOutputName, mapStationLines);
+    cout << "September Opal vs CVM per line - month" << endl;
+    TransportApplication::compareOpalAndCvmPerLinePerDay(
+        strOpalNames201609, 
+        strCvmNames201609, 
+        strMergedCvmOpalLineOutputName201609, mapStationLines);
 #endif
 #if OPAL_VS_CVM_PER_LINE_PER_DAY
     // Per line - each day of aug into one csv
 
     for (int i = 0; i < 30; i++) {
+        cout << "September Opal vs CVM per line - day" << i << endl;
         vector<string> strInputNames1;
         strInputNames1.push_back(strOpalNames201609[i]);
         vector<string> strInputNames2;
         strInputNames2.push_back(strCvmNames201609[i]);
 
         TransportApplication::compareOpalAndCvmPerLinePerDay(strInputNames1, strInputNames2, strCvmOpalDayLineOutputNames201609[i], mapStationLines);
+    }
+#endif
+
+#if TEST
+        cout << "aaaaaaaaaaa" << endl;
+
+#endif
+
+#if CVM_VS_ROAM_INTERCHANGES_PER_MONTH
+    // Per station - whole sep into one csv
+    cout << "September Roam vs CVM just interchanges - month" << endl;
+    TransportApplication::compareRoamAndCvmInterchangesPerDay(
+        strRoamNames201609, 
+        strCvmNames201609, 
+        strMergedRoamCvmInterchangesOutputName201609);
+#endif
+#if CVM_VS_ROAM_INTERCHANGES_PER_DAY
+    // Per station - each day of sep into one csv
+    for (int i = 0; i < 30; i++) {
+        cout << "September Roam vs CVM just interchanges - day " << i << endl;
+        vector<string> strInputNames1;
+        strInputNames1.push_back(strRoamNames201609[i]);
+        vector<string> strInputNames2;
+        strInputNames2.push_back(strCvmNames201609[i]);
+
+        TransportApplication::compareRoamAndCvmInterchangesPerDay(strInputNames1, strInputNames2, strRoamCvmInterchangesDayOutputNames201609[i]);
     }
 #endif
 
@@ -680,6 +734,35 @@ int main(int argc, char* argv[]) {
         "./Results/201609/Completeness Check/completeness_check.csv");
 #endif
 
+#if COMPLETENESS_CHECK2_PER_MONTH
+    vector<string> strPuncInputCSVNames;
+    strPuncInputCSVNames.push_back(puncFileDistinct201609);
+    map<std::string, std::vector<std::string> > mapPerStopInputCSVNames;
+    mapPerStopInputCSVNames.insert(pair<string, vector<string> >("Roam", strRoamPerStopNames201609));
+    mapPerStopInputCSVNames.insert(pair<string, vector<string> >("Cvm", strCvmPerStopNames201609));
+    TransportApplication::checkCompleteness2(strPuncInputCSVNames, mapPerStopInputCSVNames, 
+        strMergedCompletenessCheckOutput201609);
+#endif
+// #if COMPLETENESS_CHECK2_PER_DAY
+//     vector<string> strPuncInputCSVNames;
+//     strPuncInputCSVNames.push_back(puncFile201609);
+
+//     for (int i = 0; i < 1; i++) {
+//         cout << "September Completeness check - day " << i << endl;
+//         vector<string> strInputNames1;
+//         strInputNames1.push_back(strRoamPerStopNames201609[i]);
+//         vector<string> strInputNames2;
+//         strInputNames2.push_back(strCvmPerStopNames201609[i]);
+
+//         map<std::string, std::vector<std::string> > mapPerStopInputCSVNames;
+//         mapPerStopInputCSVNames.insert(pair<string, vector<string> >("Roam", strInputNames1));
+//         mapPerStopInputCSVNames.insert(pair<string, vector<string> >("Cvm", strInputNames2));
+
+//         TransportApplication::checkCompleteness2(strPuncInputCSVNames[i], mapPerStopInputCSVNames, 
+//             strCompletenessCheckOutput201609[i]);
+//     }
+// #endif
+
 #if CVM_PERSON_VS_STOP_PER_STATION
     TransportApplication::comparerCvmPPAndCvmPSPerStationPerDay(
         strCvmNames201609, 
@@ -687,5 +770,6 @@ int main(int argc, char* argv[]) {
         strMergedCvmPerStopOnOutputName201609, 
         strMergedCvmPerStopOffOutputName201609);
 #endif
+
 #endif
 }
